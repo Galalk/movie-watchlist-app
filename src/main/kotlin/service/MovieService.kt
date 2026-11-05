@@ -20,7 +20,7 @@ class MovieService(serializerType: Serializer) {
     fun load() {
         val array = serializer.read(Array<Movie>::class.java)
         movies = array.toCollection(ArrayList())
-        lastId = (movies.maxOfOrNull { it.id } ?: -1) + 1
+        lastId = (movies.maxOfOrNull { it.id } ?: -1) + 1 // Bug fix
     }
 
     fun store() {
