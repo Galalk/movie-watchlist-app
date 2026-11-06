@@ -7,11 +7,14 @@ import io.github.oshai.kotlinlogging.KotlinLogging
 import model.Actor
 import model.Movie
 import service.ActorService
+import service.MovieActorService
 import service.MovieService
 import java.io.File
 
 val movieService = MovieService(JSONSerializer(File("movies.json")))
 val actorService = ActorService(JSONSerializer(File("actors.json")))
+val movieActorService = MovieActorService(JSONSerializer(File("movieActors.json")))
+
 private val logger = KotlinLogging.logger {}
 
 fun main(){
@@ -22,18 +25,18 @@ fun main(){
 
 fun mainMenu(): Int {
     print(""" 
-         > ----------------------------------
-         > |        Movies Backlog App      |
-         > ----------------------------------
-         > | NOTE MENU                      |
-         > |   1) Add a Movie               |
-         > |   2) Add an Actor              |
-         > ----------------------------------
-         > |   20) Save                     |
-         > |   21) Load                     |
-         > ----------------------------------    
-         > |   0) Exit                      |
-         > ----------------------------------
+         > ------------------------------------------
+         >            Movies Backlog App ☺          
+         > ------------------------------------------    
+         > |        1) Add a Movie                  |
+         > |        2) Add an Actor                 |
+         > |        3) Add an Actor to a Movie      |
+         > ------------------------------------------
+         > |       20) Save                         |
+         > |       21) Load                         |
+         > ------------------------------------------   
+         > |        0) Exit                         |
+         > ------------------------------------------
          > """.trimMargin(">"))
     return readNextInt("==>> ")
 }
@@ -77,6 +80,30 @@ fun addActor(){
     )
 
     println("Actor successfully added")
+}
+
+fun addActorToMovie() {
+    val movieId = readNextInt("Enter Movie ID: ")
+
+    if (movieService.findMovieById(movieId) == null) {
+        println("Movie not found")
+        return
+    }
+
+    val actorName = readNextLine("Enter Actor Name: ")
+
+    val actor = actorService.findActorByName(actorName)
+
+    if (actor == null) {
+        println("Actor not found")
+        return
+    }
+
+    if (movieActorService.addActorToMovie(movieId, actor.id)) {
+        println("Actor successfully added to movie")
+    } else {
+        println("This actor is already associated with this movie")
+    }
 }
 
 fun save() {

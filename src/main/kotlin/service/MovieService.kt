@@ -11,10 +11,16 @@ class MovieService(serializerType: Serializer) {
     private var lastId = 0
     private fun getId(): Int = lastId++
 
+    fun getMovies(): List<Movie> = movies
+
     fun addMovie(movie: Movie) {
         movie.id = getId()
         movie.finished = false
         movies.add(movie)
+    }
+
+    fun findMovieById(movieId: Int): Movie? {
+        return movies.find { it.id == movieId }
     }
 
     fun load() {
