@@ -26,11 +26,12 @@ fun main(){
 fun mainMenu(): Int {
     print(""" 
          > ------------------------------------------
-         >            Movies Backlog App ☺          
+         >           Movies Backlog Tracker ☺          
          > ------------------------------------------    
          > |        1) Add a Movie                  |
          > |        2) Add an Actor                 |
          > |        3) Add an Actor to a Movie      |
+         > |        4) List All Menu                |
          > ------------------------------------------
          > |       20) Save                         |
          > |       21) Load                         |
@@ -48,6 +49,8 @@ fun runMenu (){
         when(input) {
             1 -> addMovie()
             2 -> addActor()
+            3 -> addActorToMovie()
+            4 -> listAll()
             20 -> save()
             21 -> load()
             0 ->  {
@@ -59,17 +62,19 @@ fun runMenu (){
     } while (input != 0)
 }
 
-fun addMovie(){
+fun addMovie() {
     val title = readNextLine("Title: ")
     val genre = readNextLine("Genre: ")
     val releaseYear = readNextYear("Release Year: ")
     val duration = readNextDouble("Movie duration (Hours): ")
 
-    movieService.addMovie(
-        Movie(0, title, genre, releaseYear, duration, false)
-    )
+    val movie = Movie(0, title, genre, releaseYear, duration, false)
 
-    println("Movie successfully added to backlog")
+    if (movieService.addMovie(movie)) {
+        println("Movie successfully added to backlog!")
+    } else {
+        println("This movie already exists in your backlog!")
+    }
 }
 
 fun addActor(){
@@ -79,7 +84,7 @@ fun addActor(){
         Actor(0, name)
     )
 
-    println("Actor successfully added")
+    println("Actor successfully added!")
 }
 
 fun addActorToMovie() {
@@ -104,6 +109,39 @@ fun addActorToMovie() {
     } else {
         println("This actor is already associated with this movie")
     }
+}
+
+fun listAll() {
+
+    var option: Int
+
+    do {
+        option = readNextInt(
+            """
+            > ---------------------------------
+            > |   1) View All Movies          |
+            > |   2) View All Actors          |
+            > |   3) View Watched Movies      |
+            > --------------------------------
+            > |   0) Back to Main Menu        |
+            > ---------------------------------
+            > ==>>
+            """.trimMargin(">")
+        )
+
+        when (option) {
+            1 -> movieService.getMovies().forEach { println(it) }
+            2 -> actorService.getActors().forEach { println(it) }
+            3 -> movieService.getMovies()
+                .filter { it.finished }
+                .forEach { println(it) }
+
+            0 -> println("Returning to main menu")
+
+            else -> println("Invalid option entered: $option")
+        }
+
+    } while (option != 0)
 }
 
 fun save() {

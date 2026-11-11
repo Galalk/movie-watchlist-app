@@ -2,6 +2,7 @@
 package service
 
 import Persistance.JSONSerializer
+import Persistance.Serializer
 import model.Actor
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.BeforeEach
@@ -74,6 +75,30 @@ class ActorServiceTest {
     }
 
     @Nested
+    inner class FindActorTests {
+
+        @Test
+        fun `finds actor by ID`() {
+            assertSame(actor2, populatedActorService.findActorById(1))
+        }
+
+        @Test
+        fun `returns null for unknown ID`() {
+            assertNull(populatedActorService.findActorById(99))
+        }
+
+        @Test
+        fun `finds actor by name ignoring case`() {
+            assertSame(actor1, populatedActorService.findActorByName("rUsSeLl cRoWe"))
+        }
+
+        @Test
+        fun `returns null for unknown name`() {
+            assertNull(populatedActorService.findActorByName("Unknown Actor"))
+        }
+    }
+
+    @Nested
     inner class PersistenceTests {
 
         @Test
@@ -119,5 +144,26 @@ class ActorServiceTest {
 
             assertEquals(2, newActor.id)
         }
+
+        @Test
+        fun `store passes current actors to serializer`() {
+            val serializer = CapturingSerializer()
+            val service = ActorService(serializer)
+            service.addActor(Actor(0, "Viola Davis"))
+
+            service.store()
+
+            assertSame(service.getActors(), serializer.writtenObject)
+        }
+    }
+
+    private class CapturingSerializer : Serializer {
+        var writtenObject: Any? = null
+
+        override fun write(obj: Any?) {
+            writtenObject = obj
+        }
+
+        override fun <T> read(classType: Class<T>): T = error("read should not be called")
     }
 }

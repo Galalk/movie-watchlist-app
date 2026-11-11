@@ -13,10 +13,20 @@ class MovieService(serializerType: Serializer) {
 
     fun getMovies(): List<Movie> = movies
 
-    fun addMovie(movie: Movie) {
+    fun addMovie(movie: Movie): Boolean {
+
+        if (movies.any {
+                it.title.equals(movie.title.trim(), ignoreCase = true) &&
+                        it.releaseYear == movie.releaseYear
+            }) {
+            return false
+        }
+
         movie.id = getId()
         movie.finished = false
         movies.add(movie)
+
+        return true
     }
 
     fun findMovieById(movieId: Int): Movie? {
