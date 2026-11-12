@@ -64,15 +64,9 @@ class MovieService(serializerType: Serializer) {
         return true
     }
 
-    fun updateMovie(
-        movieId: Int,
-        title: String,
-        genre: String,
-        releaseYear: Int?,
-        duration: Double
-    ): Boolean {
+    fun updateMovie(movieId: Int, title: String, genre: String, releaseYear: Int?, duration: Double): Boolean {
         val movie = findMovieById(movieId) ?: return false
-        
+
         if (movies.any {
                 it.id != movieId &&
                         it.title.equals(title.trim(), ignoreCase = true) &&

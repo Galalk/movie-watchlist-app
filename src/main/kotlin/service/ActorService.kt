@@ -28,11 +28,7 @@ class ActorService(serializerType: Serializer){
         return true
     }
 
-    fun updateActor(
-        actorId: Int,
-        name: String,
-        dateOfBirth: String
-    ): Boolean {
+    fun updateActor(actorId: Int, name: String, dateOfBirth: String): Boolean {
         val actor = findActorById(actorId) ?: return false
 
         if (actors.any {
