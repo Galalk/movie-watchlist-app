@@ -28,6 +28,33 @@ class ActorService(serializerType: Serializer){
         return true
     }
 
+    fun updateActor(
+        actorId: Int,
+        name: String,
+        dateOfBirth: String
+    ): Boolean {
+        val actor = findActorById(actorId) ?: return false
+
+        if (actors.any {
+                it.id != actorId &&
+                        it.name.equals(name.trim(), ignoreCase = true) &&
+                        it.dateOfBirth == dateOfBirth
+            }) {
+            return false
+        }
+
+        actor.name = name.trim()
+        actor.dateOfBirth = dateOfBirth
+
+        return true
+    }
+
+    fun deleteActor(actorId: Int): Boolean {
+        val actor = findActorById(actorId) ?: return false
+        actors.remove(actor)
+        return true
+    }
+
     fun findActorById(actorId: Int): Actor? {
         return actors.find { it.id == actorId }
     }

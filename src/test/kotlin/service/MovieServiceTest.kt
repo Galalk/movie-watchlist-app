@@ -175,6 +175,72 @@ class MovieServiceTest {
     }
 
     @Nested
+    inner class UpdateMovieTests {
+
+        @Test
+        fun `updates movie details while preserving ID and watched status`() {
+            val movie = Movie(title = "Old title", genre = "Old genre", releaseYear = 2000, duration = 1.0)
+            val service = MovieService(JSONSerializer(File(tempDir, "update-movie.json")))
+            assertTrue(service.addMovie(movie))
+            movie.finished = true
+
+            assertTrue(service.updateMovie(movie.id, " New title ", " New genre ", 2001, 2.5))
+
+            assertEquals("New title", movie.title)
+            assertEquals("New genre", movie.genre)
+            assertEquals(2001, movie.releaseYear)
+            assertEquals(2.5, movie.duration)
+            assertEquals(0, movie.id)
+            assertTrue(movie.finished)
+        }
+
+        @Test
+        fun `rejects update that would duplicate another title and year`() {
+            val service = MovieService(JSONSerializer(File(tempDir, "duplicate-update.json")))
+            val original = Movie(title = "Arrival", genre = "Drama", releaseYear = 2016)
+            val other = Movie(title = "Dune", genre = "Sci-Fi", releaseYear = 2021)
+            assertTrue(service.addMovie(original))
+            assertTrue(service.addMovie(other))
+
+            assertFalse(service.updateMovie(original.id, " DUNE ", "Drama", 2021, 2.0))
+
+            assertEquals("Arrival", original.title)
+            assertEquals("Drama", original.genre)
+            assertEquals(2016, original.releaseYear)
+        }
+
+        @Test
+        fun `updating unknown movie returns false`() {
+            val service = MovieService(JSONSerializer(File(tempDir, "missing-update.json")))
+
+            assertFalse(service.updateMovie(99, "Title", "Genre", 2000, 1.0))
+        }
+    }
+
+    @Nested
+    inner class DeleteMovieTests {
+
+        @Test
+        fun `deletes existing movie`() {
+            val service = MovieService(JSONSerializer(File(tempDir, "delete-movie.json")))
+            val movie = Movie(title = "Arrival")
+            assertTrue(service.addMovie(movie))
+
+            assertTrue(service.deleteMovie(movie.id))
+
+            assertNull(service.findMovieById(movie.id))
+            assertTrue(service.getMovies().isEmpty())
+        }
+
+        @Test
+        fun `deleting unknown movie returns false`() {
+            val service = MovieService(JSONSerializer(File(tempDir, "missing-delete.json")))
+
+            assertFalse(service.deleteMovie(99))
+        }
+    }
+
+    @Nested
     inner class MovieStatusTests {
 
         @Test

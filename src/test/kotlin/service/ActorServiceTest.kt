@@ -148,6 +148,67 @@ class ActorServiceTest {
     }
 
     @Nested
+    inner class UpdateActorTests {
+
+        @Test
+        fun `updates actor name and date of birth`() {
+            val service = ActorService(JSONSerializer(File(tempDir, "update-actor.json")))
+            val actor = Actor(name = "Old Name", dateOfBirth = "01-01-1980")
+            assertTrue(service.addActor(actor))
+
+            assertTrue(service.updateActor(actor.id, " New Name ", "02-02-1981"))
+
+            assertEquals("New Name", actor.name)
+            assertEquals("02-02-1981", actor.dateOfBirth)
+            assertEquals(0, actor.id)
+        }
+
+        @Test
+        fun `rejects update that would duplicate another actor`() {
+            val service = ActorService(JSONSerializer(File(tempDir, "duplicate-actor-update.json")))
+            val original = Actor(name = "First Person", dateOfBirth = "01-01-1980")
+            val other = Actor(name = "Second Person", dateOfBirth = "02-02-1981")
+            assertTrue(service.addActor(original))
+            assertTrue(service.addActor(other))
+
+            assertFalse(service.updateActor(original.id, " second person ", "02-02-1981"))
+
+            assertEquals("First Person", original.name)
+            assertEquals("01-01-1980", original.dateOfBirth)
+        }
+
+        @Test
+        fun `updating unknown actor returns false`() {
+            val service = ActorService(JSONSerializer(File(tempDir, "missing-actor-update.json")))
+
+            assertFalse(service.updateActor(99, "Name", "01-01-1980"))
+        }
+    }
+
+    @Nested
+    inner class DeleteActorTests {
+
+        @Test
+        fun `deletes existing actor`() {
+            val service = ActorService(JSONSerializer(File(tempDir, "delete-actor.json")))
+            val actor = Actor(name = "Delete Me")
+            assertTrue(service.addActor(actor))
+
+            assertTrue(service.deleteActor(actor.id))
+
+            assertNull(service.findActorById(actor.id))
+            assertTrue(service.getActors().isEmpty())
+        }
+
+        @Test
+        fun `deleting unknown actor returns false`() {
+            val service = ActorService(JSONSerializer(File(tempDir, "missing-actor-delete.json")))
+
+            assertFalse(service.deleteActor(99))
+        }
+    }
+
+    @Nested
     inner class PersistenceTests {
 
         @Test

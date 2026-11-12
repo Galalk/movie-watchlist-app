@@ -1,9 +1,12 @@
+import Persistance.JSONSerializer
 import model.Actor
 import model.Movie
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
+import service.ActorService
+import service.MovieService
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
 import java.io.File
@@ -107,6 +110,222 @@ class MainTest {
 
         assertTrue(output.contains("Actor successfully added to movie"))
         assertTrue(output.contains("Exiting App"))
+    }
+
+    @Test
+    fun `runMenu opens update and delete menus for options 7 and 8`() {
+        val output = captureOutput("7\n0\n8\n0\n0\n") { runMenu() }
+
+        assertTrue(output.contains("Update Movie"))
+        assertTrue(output.contains("Delete Movie"))
+        assertTrue(output.contains("Exiting App"))
+    }
+
+    @Test
+    fun `updateMenu reports invalid option and returns`() {
+        val output = runUpdateMenu("42\n0\n")
+
+        assertTrue(output.contains("Invalid option."))
+        assertTrue(output.contains("Returning to main menu"))
+    }
+
+    @Test
+    fun `update and delete functions report when their collections are empty`() {
+        val emptyMovieService = MovieService(JSONSerializer(File("unused-empty-movies.json")))
+        val emptyActorService = ActorService(JSONSerializer(File("unused-empty-actors.json")))
+
+        val updateMovieOutput = captureOutput("") { updateMovie(emptyMovieService) }
+        val updateActorOutput = captureOutput("") { updateActor(emptyActorService) }
+        val deleteMovieOutput = captureOutput("") { deleteMovie(emptyMovieService) }
+        val deleteActorOutput = captureOutput("") { deleteActor(emptyActorService) }
+
+        assertTrue(updateMovieOutput.contains("There are no movies to update."))
+        assertTrue(updateActorOutput.contains("There are no actors to update."))
+        assertTrue(deleteMovieOutput.contains("There are no movies to delete."))
+        assertTrue(deleteActorOutput.contains("There are no actors to delete."))
+    }
+
+    @Test
+    fun `updateMenu dispatches movie and actor updates`() {
+        val movie = Movie(title = "MenuUpdateMovie-${System.nanoTime()}")
+        val actor = Actor(name = "MenuUpdateActor-${System.nanoTime()}", dateOfBirth = "01-01-1980")
+        assertTrue(movieService.addMovie(movie))
+        assertTrue(actorService.addActor(actor))
+        val input = listOf(
+            "1", movie.id.toString(), "Menu Updated Movie", "Comedy", "2022", "2.0",
+            "2", actor.id.toString(), "Menu Updated Actor", "02-02-1981",
+            "0"
+        ).joinToString("\n") + "\n"
+
+        val output = runUpdateMenu(input)
+
+        assertTrue(output.contains("Movie updated successfully."))
+        assertTrue(output.contains("Actor updated successfully."))
+        assertEquals("Menu Updated Movie", movie.title)
+        assertEquals("Menu Updated Actor", actor.name)
+    }
+
+    @Test
+    fun `updateMovie changes movie details`() {
+        val movie = Movie(title = "Before-${System.nanoTime()}", genre = "Drama", releaseYear = 2000)
+        assertTrue(movieService.addMovie(movie))
+
+        val output = runUpdateMovie("${movie.id}\nUpdated title\nComedy\n2001\n2.5\n")
+
+        assertEquals("Updated title", movie.title)
+        assertEquals("Comedy", movie.genre)
+        assertEquals(2001, movie.releaseYear)
+        assertEquals(2.5, movie.duration)
+        assertTrue(output.contains("Movie updated successfully."))
+    }
+
+    @Test
+    fun `updateMovie reports unknown ID and does not update another movie`() {
+        val original = Movie(title = "Existing-${System.nanoTime()}")
+        assertTrue(movieService.addMovie(original))
+
+        val output = runUpdateMovie("2147483647\nUpdated\nComedy\n2001\n2.5\n")
+
+        assertTrue(output.contains("Movie not found."))
+        assertTrue(original.title.startsWith("Existing-"))
+    }
+
+    @Test
+    fun `updateMovie reports duplicate title and year`() {
+        val originalTitle = "Original-${System.nanoTime()}"
+        val original = Movie(title = originalTitle, releaseYear = 2000)
+        val other = Movie(title = "DuplicateTarget-${System.nanoTime()}", releaseYear = 2020)
+        assertTrue(movieService.addMovie(original))
+        assertTrue(movieService.addMovie(other))
+
+        val output = runUpdateMovie("${original.id}\n${other.title}\nDrama\n2020\n2.0\n")
+
+        assertTrue(output.contains("Update failed."))
+        assertEquals(originalTitle, original.title)
+        assertEquals(2000, original.releaseYear)
+    }
+
+    @Test
+    fun `updateActor changes actor name and date of birth`() {
+        val actor = Actor(name = "Before-${System.nanoTime()}", dateOfBirth = "01-01-1980")
+        assertTrue(actorService.addActor(actor))
+
+        val output = runUpdateActor("${actor.id}\nUpdated Actor\n02-02-1981\n")
+
+        assertEquals("Updated Actor", actor.name)
+        assertEquals("02-02-1981", actor.dateOfBirth)
+        assertTrue(output.contains("Actor updated successfully."))
+    }
+
+    @Test
+    fun `updateActor reports unknown ID`() {
+        val output = runUpdateActor("2147483647\nUpdated Actor\n02-02-1981\n")
+
+        assertTrue(output.contains("Actor not found."))
+    }
+
+    @Test
+    fun `updateActor reports duplicate name and date of birth`() {
+        val original = Actor(name = "Original-${System.nanoTime()}", dateOfBirth = "01-01-1980")
+        val other = Actor(name = "DuplicateTarget-${System.nanoTime()}", dateOfBirth = "02-02-1981")
+        assertTrue(actorService.addActor(original))
+        assertTrue(actorService.addActor(other))
+
+        val output = runUpdateActor("${original.id}\n${other.name}\n02-02-1981\n")
+
+        assertTrue(output.contains("Update failed."))
+        assertTrue(original.name.startsWith("Original-"))
+        assertEquals("01-01-1980", original.dateOfBirth)
+    }
+
+    @Test
+    fun `deleteMenu reports invalid option and returns`() {
+        val output = runDeleteMenu("42\n0\n")
+
+        assertTrue(output.contains("Invalid option."))
+        assertTrue(output.contains("Returning to main menu"))
+    }
+
+    @Test
+    fun `deleteMenu dispatches movie and actor deletions`() {
+        val movie = Movie(title = "MenuDeleteMovie-${System.nanoTime()}")
+        val actor = Actor(name = "MenuDeleteActor-${System.nanoTime()}")
+        assertTrue(movieService.addMovie(movie))
+        assertTrue(actorService.addActor(actor))
+        assertTrue(movieActorService.addActorToMovie(movie.id, actor.id))
+        val input = "1\n${movie.id}\nYES\n2\n${actor.id}\nYES\n0\n"
+
+        val output = runDeleteMenu(input)
+
+        assertTrue(output.contains("Movie and its actor associations deleted successfully."))
+        assertTrue(output.contains("Actor and their movie associations deleted successfully."))
+        assertEquals(null, movieService.findMovieById(movie.id))
+        assertEquals(null, actorService.findActorById(actor.id))
+    }
+
+    @Test
+    fun `deleteMovie can be cancelled without removing movie or association`() {
+        val movie = Movie(title = "CancelMovie-${System.nanoTime()}")
+        val actor = Actor(name = "CancelActor-${System.nanoTime()}")
+        assertTrue(movieService.addMovie(movie))
+        assertTrue(actorService.addActor(actor))
+        assertTrue(movieActorService.addActorToMovie(movie.id, actor.id))
+
+        val output = runDeleteMovie("${movie.id}\nno\n")
+
+        assertTrue(output.contains("Deletion cancelled."))
+        assertTrue(movieService.findMovieById(movie.id) === movie)
+        assertFalse(movieActorService.addActorToMovie(movie.id, actor.id))
+    }
+
+    @Test
+    fun `deleteMovie confirmation removes movie and its associations`() {
+        val movie = Movie(title = "DeleteMovie-${System.nanoTime()}")
+        val actor = Actor(name = "KeepActor-${System.nanoTime()}")
+        assertTrue(movieService.addMovie(movie))
+        assertTrue(actorService.addActor(actor))
+        assertTrue(movieActorService.addActorToMovie(movie.id, actor.id))
+
+        val output = runDeleteMovie("${movie.id}\nYES\n")
+
+        assertTrue(output.contains("Movie and its actor associations deleted successfully."))
+        assertEquals(null, movieService.findMovieById(movie.id))
+        assertTrue(movieActorService.addActorToMovie(movie.id, actor.id))
+    }
+
+    @Test
+    fun `deleteMovie reports unknown ID`() {
+        val output = runDeleteMovie("2147483647\n")
+
+        assertTrue(output.contains("Movie not found."))
+    }
+
+    @Test
+    fun `deleteActor confirmation removes actor and their associations`() {
+        val movie = Movie(title = "KeepMovie-${System.nanoTime()}")
+        val actor = Actor(name = "DeleteActor-${System.nanoTime()}")
+        assertTrue(movieService.addMovie(movie))
+        assertTrue(actorService.addActor(actor))
+        assertTrue(movieActorService.addActorToMovie(movie.id, actor.id))
+
+        val output = runDeleteActor("${actor.id}\nyes\n")
+
+        assertTrue(output.contains("Actor and their movie associations deleted successfully."))
+        assertEquals(null, actorService.findActorById(actor.id))
+        assertTrue(movieActorService.addActorToMovie(movie.id, actor.id))
+    }
+
+    @Test
+    fun `deleteActor can be cancelled and reports unknown IDs`() {
+        val actor = Actor(name = "KeepActor-${System.nanoTime()}")
+        assertTrue(actorService.addActor(actor))
+
+        val cancelled = runDeleteActor("${actor.id}\nno\n")
+        val missing = runDeleteActor("2147483647\n")
+
+        assertTrue(cancelled.contains("Deletion cancelled."))
+        assertTrue(actorService.findActorById(actor.id) === actor)
+        assertTrue(missing.contains("Actor not found."))
     }
 
     @Test
@@ -384,6 +603,30 @@ class MainTest {
 
     private fun runAddActorToMovie(input: String): String {
         return captureOutput(input) { addActorToMovie() }
+    }
+
+    private fun runUpdateMenu(input: String): String {
+        return captureOutput(input) { updateMenu() }
+    }
+
+    private fun runUpdateMovie(input: String): String {
+        return captureOutput(input) { updateMovie() }
+    }
+
+    private fun runUpdateActor(input: String): String {
+        return captureOutput(input) { updateActor() }
+    }
+
+    private fun runDeleteMenu(input: String): String {
+        return captureOutput(input) { deleteMenu() }
+    }
+
+    private fun runDeleteMovie(input: String): String {
+        return captureOutput(input) { deleteMovie() }
+    }
+
+    private fun runDeleteActor(input: String): String {
+        return captureOutput(input) { deleteActor() }
     }
 
     private fun runStatusMenu(input: String): String {
