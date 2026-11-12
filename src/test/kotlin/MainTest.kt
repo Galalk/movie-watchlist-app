@@ -103,8 +103,9 @@ class MainTest {
         val actorName = "RunMenuLinkActor-${System.nanoTime()}"
         val dateOfBirth = "17-08-1985"
         assertTrue(movieService.addMovie(movie))
-        assertTrue(actorService.addActor(Actor(name = actorName, dateOfBirth = dateOfBirth)))
-        val input = "4\n${movie.id}\n$actorName\n$dateOfBirth\n0\n"
+        val actor = Actor(name = actorName, dateOfBirth = dateOfBirth)
+        assertTrue(actorService.addActor(actor))
+        val input = "4\n${movie.id}\n${actor.id}\n0\n"
 
         val output = captureOutput(input) { runMenu() }
 
@@ -387,30 +388,31 @@ class MainTest {
     }
 
     @Test
-    fun `addActorToMovie searches actor by name and date of birth`() {
+    fun `addActorToMovie associates the actor selected by ID`() {
         val movie = Movie(title = "ActorLinkMovie-${System.nanoTime()}")
         val actorName = "ActorLink-${System.nanoTime()}"
-        val dateOfBirth = "17-08-1985"
-        val actor = Actor(name = actorName, dateOfBirth = dateOfBirth)
+        val firstActor = Actor(name = actorName, dateOfBirth = "17-08-1985")
+        val selectedActor = Actor(name = actorName, dateOfBirth = "18-08-1986")
         assertTrue(movieService.addMovie(movie))
-        assertTrue(actorService.addActor(actor))
+        assertTrue(actorService.addActor(firstActor))
+        assertTrue(actorService.addActor(selectedActor))
 
-        val input = "${movie.id}\n$actorName\n$dateOfBirth\n"
+        val input = "${movie.id}\n${selectedActor.id}\n"
         val firstOutput = runAddActorToMovie(input)
         val secondOutput = runAddActorToMovie(input)
 
         assertTrue(firstOutput.contains("Actor successfully added to movie"))
         assertTrue(secondOutput.contains("This actor is already associated with this movie"))
+        assertFalse(movieActorService.addActorToMovie(movie.id, selectedActor.id))
+        assertTrue(movieActorService.addActorToMovie(movie.id, firstActor.id))
     }
 
     @Test
-    fun `addActorToMovie reports when name and date of birth do not match`() {
+    fun `addActorToMovie reports when actor ID is unknown`() {
         val movie = Movie(title = "ActorNotFoundMovie-${System.nanoTime()}")
-        val actorName = "ActorWrongDOB-${System.nanoTime()}"
         assertTrue(movieService.addMovie(movie))
-        assertTrue(actorService.addActor(Actor(name = actorName, dateOfBirth = "17-08-1985")))
 
-        val output = runAddActorToMovie("${movie.id}\n$actorName\n18-08-1985\n")
+        val output = runAddActorToMovie("${movie.id}\n2147483647\n")
 
         assertTrue(output.contains("Actor not found"))
     }

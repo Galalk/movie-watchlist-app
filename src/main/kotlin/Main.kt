@@ -185,9 +185,8 @@ fun addActorToMovie() {
         return
     }
 
-    val actorName = readNextLine("Enter Actor Name: ")
-    val actorDate = readNextDOB("Enter Actor Date of Birth: ")
-    val actor = actorService.searchActor(actorName, actorDate)
+    val actorId = readNextInt("Enter Actor ID: ")
+    val actor = actorService.findActorById(actorId)
 
     if (actor == null) {
         println("Actor not found")
