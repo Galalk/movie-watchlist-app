@@ -33,6 +33,31 @@ class MovieService(serializerType: Serializer) {
         return movies.find { it.id == movieId }
     }
 
+    fun findMovie(title: String, releaseYear: Int): Movie? {
+        return movies.find {
+            it.title.equals(title.trim(), ignoreCase = true) &&
+                    it.releaseYear == releaseYear
+        }
+    }
+
+    fun markMovieAsWatched(movieId: Int): Boolean {
+
+        val movie = movies.find { it.id == movieId } ?: return false
+
+        movie.finished = true
+        store()
+
+        return true
+    }
+
+    fun markMovieAsToWatch(movieId: Int): Boolean {
+        val movie = movies.find { it.id == movieId } ?: return false
+
+        movie.finished = false
+        store()
+        return true
+    }
+
     fun load() {
         val array = serializer.read(Array<Movie>::class.java)
         movies = array.toCollection(ArrayList())

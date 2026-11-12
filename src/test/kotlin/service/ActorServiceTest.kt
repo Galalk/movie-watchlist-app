@@ -32,11 +32,11 @@ class ActorServiceTest {
             JSONSerializer(File(tempDir, "actors.json"))
         )
 
-        actor1 = Actor(0, "Russell Crowe")
-        actor2 = Actor(0, "Tom Cruise")
+        actor1 = Actor(0, "Russell Crowe", "07-04-1964")
+        actor2 = Actor(0, "Tom Cruise", "03-07-1962")
 
-        populatedActorService.addActor(actor1)
-        populatedActorService.addActor(actor2)
+        assertTrue(populatedActorService.addActor(actor1))
+        assertTrue(populatedActorService.addActor(actor2))
     }
 
     @Nested
@@ -46,14 +46,14 @@ class ActorServiceTest {
         fun `adding actor increases collection size`() {
             assertEquals(0, emptyActorService.getActors().size)
 
-            emptyActorService.addActor(Actor(0, "Brad Pitt"))
+            assertTrue(emptyActorService.addActor(Actor(0, "Brad Pitt")))
 
             assertEquals(1, emptyActorService.getActors().size)
         }
 
         @Test
         fun `adding actor assigns an ID`() {
-            emptyActorService.addActor(actor1)
+            assertTrue(emptyActorService.addActor(actor1))
 
             assertEquals(0, actor1.id)
         }
@@ -66,11 +66,39 @@ class ActorServiceTest {
 
         @Test
         fun `adding actor stores correct information`() {
-            emptyActorService.addActor(actor1)
+            assertTrue(emptyActorService.addActor(actor1))
 
             val retrievedActor = emptyActorService.getActors().first()
 
             assertEquals("Russell Crowe", retrievedActor.name)
+        }
+
+        @Test
+        fun `adding actor with same name and date of birth is rejected ignoring case`() {
+            val service = ActorService(JSONSerializer(File(tempDir, "duplicates.json")))
+            val original = Actor(name = "Morgan Freeman", dateOfBirth = "01-06-1937")
+            val duplicate = Actor(name = "  mOrGaN fReEmAn  ", dateOfBirth = "01-06-1937")
+            assertTrue(service.addActor(original))
+
+            assertFalse(service.addActor(duplicate))
+
+            assertEquals(1, service.getActors().size)
+            val nextActor = Actor(name = "Another actor")
+            assertTrue(service.addActor(nextActor))
+            assertEquals(1, nextActor.id)
+        }
+
+        @Test
+        fun `same actor name with different dates of birth is accepted`() {
+            val service = ActorService(JSONSerializer(File(tempDir, "different-dobs.json")))
+            val original = Actor(name = "Chris Evans", dateOfBirth = "13-06-1981")
+            val differentPerson = Actor(name = "Chris Evans", dateOfBirth = "20-02-1990")
+
+            assertTrue(service.addActor(original))
+            assertTrue(service.addActor(differentPerson))
+
+            assertEquals(2, service.getActors().size)
+            assertEquals(1, differentPerson.id)
         }
     }
 
@@ -126,7 +154,9 @@ class ActorServiceTest {
 
             assertEquals(2, loadedService.getActors().size)
             assertEquals("Russell Crowe", loadedService.getActors()[0].name)
+            assertEquals("07-04-1964", loadedService.getActors()[0].dateOfBirth)
             assertEquals("Tom Cruise", loadedService.getActors()[1].name)
+            assertEquals("03-07-1962", loadedService.getActors()[1].dateOfBirth)
         }
 
         @Test
@@ -139,8 +169,8 @@ class ActorServiceTest {
 
             loadedService.load()
 
-            val newActor = Actor(0, "Brad Pitt")
-            loadedService.addActor(newActor)
+            val newActor = Actor(0, "Brad Pitt", "18-12-1963")
+            assertTrue(loadedService.addActor(newActor))
 
             assertEquals(2, newActor.id)
         }
@@ -149,7 +179,7 @@ class ActorServiceTest {
         fun `store passes current actors to serializer`() {
             val serializer = CapturingSerializer()
             val service = ActorService(serializer)
-            service.addActor(Actor(0, "Viola Davis"))
+            assertTrue(service.addActor(Actor(0, "Viola Davis")))
 
             service.store()
 

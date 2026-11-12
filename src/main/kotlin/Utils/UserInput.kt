@@ -51,3 +51,15 @@ fun readNextBoolean(prompt: String = ""): Boolean {
     }
 }
 
+fun readNextDOB(prompt: String): String {
+    while (true) {
+        val dob = readNextLine(prompt)
+
+        if (dob.matches(Regex("\\d{2}-\\d{2}-\\d{4}"))) {
+            return dob
+        } else {
+            println("Invalid date format! Please use DD-MM-YYYY.")
+        }
+    }
+}
+

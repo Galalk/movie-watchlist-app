@@ -1,4 +1,5 @@
 import Persistance.JSONSerializer
+import Utils.readNextDOB
 import Utils.readNextDouble
 import Utils.readNextInt
 import Utils.readNextLine
@@ -32,6 +33,7 @@ fun mainMenu(): Int {
          > |        2) Add an Actor                 |
          > |        3) Add an Actor to a Movie      |
          > |        4) List All Menu                |
+         > |        5) Change Movie Watch Status    |
          > ------------------------------------------
          > |       20) Save                         |
          > |       21) Load                         |
@@ -51,6 +53,7 @@ fun runMenu (){
             2 -> addActor()
             3 -> addActorToMovie()
             4 -> listAll()
+            5 -> changeMovieStatus()
             20 -> save()
             21 -> load()
             0 ->  {
@@ -79,12 +82,13 @@ fun addMovie() {
 
 fun addActor(){
     val name = readNextLine("Full name: ")
+    val dateOfBirth = readNextDOB("Date of Birth (DD-MM-YYYY): ")
 
-    actorService.addActor(
-        Actor(0, name)
-    )
-
-    println("Actor successfully added!")
+    if (actorService.addActor(Actor(0, name, dateOfBirth))) {
+        println("Actor successfully added!")
+    } else {
+        println("This actor already exists!")
+    }
 }
 
 fun addActorToMovie() {
@@ -118,7 +122,7 @@ fun listAll() {
     do {
         option = readNextInt(
             """
-            > ---------------------------------
+            > ---------- List Menu ------------
             > |   1) View All Movies          |
             > |   2) View All Actors          |
             > |   3) View Watched Movies      |
@@ -144,10 +148,79 @@ fun listAll() {
     } while (option != 0)
 }
 
+fun changeMovieStatus() {
+    var option: Int
+
+    do {
+        println("""
+            > ---------- List Menu ------------
+            > |   1) Change Movie to Watched  |       
+            > |   2) Revert Movie to To Watch |         
+            > --------------------------------
+            > |   0) Back to Main Menu        |
+            > ---------------------------------
+        """.trimIndent())
+
+        option = readNextInt("Enter option: ")
+
+        when (option) {
+            1 -> addMovieToWatched()
+            2 -> revertMovieStatus()
+
+            0 -> println("Returning to main menu...")
+
+            else -> println("Invalid option!")
+        }
+    } while (option != 0)
+}
+
+fun addMovieToWatched() {
+
+    val id = readNextInt("Enter Movie ID: ")
+
+
+    val movie = movieService.findMovieById(id)
+
+    if (movie == null) {
+        println("Movie not found!")
+        return
+    }
+
+    if (movie.finished) {
+        println("This movie is already marked as watched!")
+        return
+    }
+
+    if (movieService.markMovieAsWatched(movie.id)) {
+        println("Movie successfully added to watched list")
+    }
+}
+
+fun revertMovieStatus() {
+    val id = readNextInt("Enter Movie ID: ")
+
+    val movie = movieService.findMovieById(id)
+
+    if (movie == null) {
+        println("Movie not found!")
+        return
+    }
+
+    if (!movie.finished) {
+        println("This movie is already marked as To Watch!")
+        return
+    }
+
+    if (movieService.markMovieAsToWatch(movie.id)) {
+        println("Movie successfully added back into to your backlog!")
+    }
+}
+
 fun save() {
     try {
         movieService.store()
         actorService.store()
+        movieActorService.store()
     } catch (e: Exception) {
         System.err.println("Error writing to file: $e")
     }
@@ -157,6 +230,7 @@ fun load() {
     try {
         movieService.load()
         actorService.load()
+        movieActorService.load()
     } catch (e: Exception) {
         System.err.println("Error reading from file: $e")
     }
