@@ -1,9 +1,9 @@
 import Persistance.JSONSerializer
-import Utils.readNextDOB
-import Utils.readNextDouble
-import Utils.readNextInt
-import Utils.readNextLine
-import Utils.readNextYear
+import utils.readNextDOB
+import utils.readNextDouble
+import utils.readNextInt
+import utils.readNextLine
+import utils.readNextYear
 import io.github.oshai.kotlinlogging.KotlinLogging
 import model.Actor
 import model.Movie
@@ -19,7 +19,7 @@ val movieActorService = MovieActorService(JSONSerializer(File("movieActors.json"
 private val logger = KotlinLogging.logger {}
 
 fun main(){
-    logger.info { "Notes App Started" }
+    logger.info { "Movie Backlog Tracker Started" }
 
     runMenu()
 }
@@ -28,12 +28,13 @@ fun mainMenu(): Int {
     print(""" 
          > ------------------------------------------
          >           Movies Backlog Tracker ☺          
-         > ------------------------------------------    
-         > |        1) Add a Movie                  |
-         > |        2) Add an Actor                 |
-         > |        3) Add an Actor to a Movie      |
-         > |        4) List All Menu                |
-         > |        5) Change Movie Watch Status    |
+         > ------------------------------------------
+         > |        1) Search and Filter            |
+         > |        2) Add a Movie                  |
+         > |        3) Add an Actor                 |
+         > |        4) Add an Actor to a Movie      |
+         > |        5) List All Menu                |
+         > |        6) Change Movie Watch Status    |
          > ------------------------------------------
          > |       20) Save                         |
          > |       21) Load                         |
@@ -49,20 +50,103 @@ fun runMenu (){
     do {
         input = mainMenu()
         when(input) {
-            1 -> addMovie()
-            2 -> addActor()
-            3 -> addActorToMovie()
-            4 -> listAll()
-            5 -> changeMovieStatus()
+            1 -> searchMenu()
+            2 -> addMovie()
+            3 -> addActor()
+            4 -> addActorToMovie()
+            5 -> listAll()
+            6 -> changeMovieStatus()
             20 -> save()
             21 -> load()
             0 ->  {
                 println("Exiting App")
-                logger.info { "Notes App Exiting" }
+                logger.info { "Movie Backlog Tracker Exiting" }
             }
             else -> println("Invalid Option")
         }
     } while (input != 0)
+}
+
+fun searchMenu() {
+
+    var option: Int
+
+    do {
+        println("""
+            > ---------- Search Menu ------------
+            > |   1) Search for Movie           |
+            > |   2) Search for Actor           | 
+            > |   3) Filter Movies by Genre     |
+            > |   4) Filter Actors by Name      |
+            > -----------------------------------
+            > |   0) Back to Main Menu          |
+            > -----------------------------------
+        """.trimIndent())
+
+        option = readNextInt("Enter option: ")
+
+        when (option) {
+            1 -> searchMovie()
+            2 -> searchActor()
+            3 -> filterMoviesByGenre()
+            4 -> filterActorsByName()
+
+            0 -> println("Returning to main menu...")
+
+            else -> println("Invalid option")
+        }
+
+    } while (option != 0)
+}
+
+fun searchMovie() {
+
+    val title = readNextLine("Enter movie title: ")
+    val releaseYear = readNextYear("Enter release year: ")
+
+    val movie = movieService.searchMovie(title, releaseYear)
+
+    if (movie != null) {
+        println(movie.toString())
+    }
+}
+
+fun searchActor() {
+
+    val name = readNextLine("Enter actor name: ")
+    val dateOfBirth = readNextDOB("Enter date of birth: ")
+
+    val actor = actorService.searchActor(name, dateOfBirth)
+
+    if (actor != null) {
+        println(actor.toString())
+    }
+}
+
+fun filterMoviesByGenre() {
+
+    val genre = readNextLine("Enter genre: ")
+
+    val filteredMovies = movieService.filterMoviesByGenre(genre)
+
+    if (filteredMovies.isNotEmpty()) {
+        filteredMovies.forEach { println(it) }
+    } else {
+        println("No movies found for this genre.")
+    }
+}
+
+fun filterActorsByName() {
+
+    val name = readNextLine("Enter actor name: ")
+
+    val filteredActors = actorService.filterActorsByName(name)
+
+    if (filteredActors.isNotEmpty()) {
+        filteredActors.forEach { println(it) }
+    } else {
+        println("No actors found.")
+    }
 }
 
 fun addMovie() {
@@ -100,8 +184,8 @@ fun addActorToMovie() {
     }
 
     val actorName = readNextLine("Enter Actor Name: ")
-
-    val actor = actorService.findActorByName(actorName)
+    val actorDate = readNextDOB("Enter Actor Date of Birth: ")
+    val actor = actorService.searchActor(actorName, actorDate)
 
     if (actor == null) {
         println("Actor not found")

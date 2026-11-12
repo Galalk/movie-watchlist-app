@@ -33,10 +33,16 @@ class MovieService(serializerType: Serializer) {
         return movies.find { it.id == movieId }
     }
 
-    fun findMovie(title: String, releaseYear: Int): Movie? {
-        return movies.find {
-            it.title.equals(title.trim(), ignoreCase = true) &&
+    fun searchMovie(title: String, releaseYear: Int?): Movie? {
+        return movies.firstOrNull {
+            it.title.equals(title, ignoreCase = true) &&
                     it.releaseYear == releaseYear
+        }
+    }
+
+    fun filterMoviesByGenre(genre: String): List<Movie> {
+        return movies.filter {
+            it.genre.equals(genre, ignoreCase = true)
         }
     }
 

@@ -113,7 +113,7 @@ class MovieServiceTest {
     }
 
     @Nested
-    inner class FindMovieTests {
+    inner class SearchMovieTests {
 
         @Test
         fun `finds movie by its ID`() {
@@ -126,12 +126,12 @@ class MovieServiceTest {
         }
 
         @Test
-        fun `finds movie by trimmed case insensitive title and release year`() {
+        fun `searches movie by case insensitive title and release year`() {
             val movie = Movie(title = "The Matrix", releaseYear = 1999)
             val service = MovieService(JSONSerializer(File(tempDir, "find-movie.json")))
             assertTrue(service.addMovie(movie))
 
-            assertSame(movie, service.findMovie("  tHe MaTrIx ", 1999))
+            assertSame(movie, service.searchMovie("tHe MaTrIx", 1999))
         }
 
         @Test
@@ -140,8 +140,37 @@ class MovieServiceTest {
             val service = MovieService(JSONSerializer(File(tempDir, "find-movie.json")))
             assertTrue(service.addMovie(movie))
 
-            assertNull(service.findMovie("Unknown", 1999))
-            assertNull(service.findMovie("The Matrix", 2003))
+            assertNull(service.searchMovie("Unknown", 1999))
+            assertNull(service.searchMovie("The Matrix", 2003))
+        }
+
+        @Test
+        fun `searches for a movie with no release year`() {
+            val movie = Movie(title = "Untitled Release")
+            val service = MovieService(JSONSerializer(File(tempDir, "no-release-year.json")))
+            assertTrue(service.addMovie(movie))
+
+            assertSame(movie, service.searchMovie("Untitled Release", null))
+        }
+    }
+
+    @Nested
+    inner class FilterMoviesTests {
+
+        @Test
+        fun `filters movies by exact genre ignoring case`() {
+            val movie = Movie(title = "Arrival", genre = "Science Fiction")
+            assertTrue(emptyMovieService.addMovie(movie))
+            assertTrue(emptyMovieService.addMovie(Movie(title = "Alien", genre = "Horror")))
+
+            assertEquals(listOf(movie), emptyMovieService.filterMoviesByGenre("science fiction"))
+        }
+
+        @Test
+        fun `returns empty list when no movie has the requested genre`() {
+            assertTrue(emptyMovieService.addMovie(Movie(title = "Arrival", genre = "Science Fiction")))
+
+            assertTrue(emptyMovieService.filterMoviesByGenre("Comedy").isEmpty())
         }
     }
 

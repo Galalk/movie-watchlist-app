@@ -32,8 +32,17 @@ class ActorService(serializerType: Serializer){
         return actors.find { it.id == actorId }
     }
 
-    fun findActorByName(name: String): Actor? {
-        return actors.find { it.name.equals(name, ignoreCase = true) }
+    fun searchActor(name: String, dateOfBirth: String): Actor? {
+        return actors.firstOrNull {
+            it.name.equals(name, ignoreCase = true) &&
+                    it.dateOfBirth == dateOfBirth
+        }
+    }
+
+    fun filterActorsByName(name: String): List<Actor> {
+        return actors.filter {
+            it.name.contains(name, ignoreCase = true)
+        }
     }
 
     fun load() {
