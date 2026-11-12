@@ -24,6 +24,18 @@ class MovieActorService(serializerType: Serializer) {
         return true
     }
 
+    fun deleteAssociationsForMovie(movieId: Int): Boolean {
+        return movieActors.removeAll {
+            it.movieId == movieId
+        }
+    }
+
+    fun deleteAssociationsForActor(actorId: Int): Boolean {
+        return movieActors.removeAll {
+            it.actorId == actorId
+        }
+    }
+
 
     fun load() {
         val array = serializer.read(Array<MovieActor>::class.java)

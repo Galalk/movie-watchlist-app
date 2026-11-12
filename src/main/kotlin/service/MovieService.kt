@@ -64,6 +64,37 @@ class MovieService(serializerType: Serializer) {
         return true
     }
 
+    fun updateMovie(
+        movieId: Int,
+        title: String,
+        genre: String,
+        releaseYear: Int?,
+        duration: Double
+    ): Boolean {
+        val movie = findMovieById(movieId) ?: return false
+        
+        if (movies.any {
+                it.id != movieId &&
+                        it.title.equals(title.trim(), ignoreCase = true) &&
+                        it.releaseYear == releaseYear
+            }) {
+            return false
+        }
+
+        movie.title = title.trim()
+        movie.genre = genre.trim()
+        movie.releaseYear = releaseYear
+        movie.duration = duration
+
+        return true
+    }
+
+    fun deleteMovie(movieId: Int): Boolean {
+        val movie = findMovieById(movieId) ?: return false
+        movies.remove(movie)
+        return true
+    }
+
     fun load() {
         val array = serializer.read(Array<Movie>::class.java)
         movies = array.toCollection(ArrayList())

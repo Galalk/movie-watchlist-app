@@ -82,5 +82,31 @@ class MovieActorServiceTest {
 
             assertTrue(loadedService.addActorToMovie(12, 34))
         }
+
+        @Test
+        fun `deleting associations for a movie removes only that movie links`() {
+            assertTrue(movieActorService.addActorToMovie(1, 10))
+            assertTrue(movieActorService.addActorToMovie(1, 11))
+            assertTrue(movieActorService.addActorToMovie(2, 10))
+
+            assertTrue(movieActorService.deleteAssociationsForMovie(1))
+
+            assertFalse(movieActorService.deleteAssociationsForMovie(1))
+            assertTrue(movieActorService.addActorToMovie(1, 10))
+            assertFalse(movieActorService.addActorToMovie(2, 10))
+        }
+
+        @Test
+        fun `deleting associations for an actor removes only that actor links`() {
+            assertTrue(movieActorService.addActorToMovie(1, 10))
+            assertTrue(movieActorService.addActorToMovie(2, 10))
+            assertTrue(movieActorService.addActorToMovie(1, 11))
+
+            assertTrue(movieActorService.deleteAssociationsForActor(10))
+
+            assertFalse(movieActorService.deleteAssociationsForActor(10))
+            assertTrue(movieActorService.addActorToMovie(1, 10))
+            assertFalse(movieActorService.addActorToMovie(1, 11))
+        }
     }
 }

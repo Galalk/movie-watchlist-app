@@ -29,17 +29,19 @@ fun mainMenu(): Int {
          > ------------------------------------------
          >           Movies Backlog Tracker ☺          
          > ------------------------------------------
-         > |        1) Search and Filter            |
-         > |        2) Add a Movie                  |
-         > |        3) Add an Actor                 |
-         > |        4) Add an Actor to a Movie      |
-         > |        5) List All Menu                |
-         > |        6) Change Movie Watch Status    |
+         > |     1) Search and Filter               |
+         > |     2) Add a Movie                     |
+         > |     3) Add an Actor                    |
+         > |     4) Add an Actor to a Movie         |
+         > |     5) List All Menu                   |
+         > |     6) Change Movie Watch Status       |
+         > |     7) Update Movie or Actor           |
+         > |     8) Delete Movie or Actor           |
          > ------------------------------------------
-         > |       20) Save                         |
-         > |       21) Load                         |
+         > |    20) Save                            |
+         > |    21) Load                            |
          > ------------------------------------------   
-         > |        0) Exit                         |
+         > |     0) Exit                            |
          > ------------------------------------------
          > """.trimMargin(">"))
     return readNextInt("==>> ")
@@ -56,6 +58,8 @@ fun runMenu (){
             4 -> addActorToMovie()
             5 -> listAll()
             6 -> changeMovieStatus()
+            7 -> updateMenu()
+            8 -> deleteMenu()
             20 -> save()
             21 -> load()
             0 ->  {
@@ -90,9 +94,7 @@ fun searchMenu() {
             2 -> searchActor()
             3 -> filterMoviesByGenre()
             4 -> filterActorsByName()
-
             0 -> println("Returning to main menu...")
-
             else -> println("Invalid option")
         }
 
@@ -223,9 +225,7 @@ fun listAll() {
             3 -> movieService.getMovies()
                 .filter { it.finished }
                 .forEach { println(it) }
-
             0 -> println("Returning to main menu")
-
             else -> println("Invalid option entered: $option")
         }
 
@@ -237,7 +237,7 @@ fun changeMovieStatus() {
 
     do {
         println("""
-            > ---------- List Menu ------------
+            > --------- Movie Status ----------
             > |   1) Change Movie to Watched  |       
             > |   2) Revert Movie to To Watch |         
             > --------------------------------
@@ -250,9 +250,7 @@ fun changeMovieStatus() {
         when (option) {
             1 -> addMovieToWatched()
             2 -> revertMovieStatus()
-
             0 -> println("Returning to main menu...")
-
             else -> println("Invalid option!")
         }
     } while (option != 0)
@@ -297,6 +295,191 @@ fun revertMovieStatus() {
 
     if (movieService.markMovieAsToWatch(movie.id)) {
         println("Movie successfully added back into to your backlog!")
+    }
+}
+
+fun updateMenu() {
+    var option: Int
+
+    do {
+        println("""
+
+            > ---------- Update Menu ----------
+            > |   1) Update Movie             |
+            > |   2) Update Actor             |
+            > --------------------------------
+            > |   0) Back to Main Menu        |
+            > ---------------------------------
+        """.trimIndent())
+
+        option = readNextInt("Enter option: ")
+
+        when (option) {
+            1 -> updateMovie()
+            2 -> updateActor()
+            0 -> println("Returning to main menu...")
+            else -> println("Invalid option.")
+        }
+
+    } while (option != 0)
+}
+
+fun updateMovie(service: MovieService = movieService) {
+    if (service.getMovies().isEmpty()) {
+        println("There are no movies to update.")
+        return
+    }
+
+    println("\n--- Movies ---")
+    service.getMovies().forEach { println(it) }
+
+    val movieId = readNextInt("Enter the Movie ID to update: ")
+    val movie = service.findMovieById(movieId)
+
+    if (movie == null) {
+        println("Movie not found.")
+        return
+    }
+
+    println("\nEnter the updated movie details:")
+
+    val title = readNextLine("Enter title: ")
+    val genre = readNextLine("Enter genre: ")
+    val releaseYear = readNextYear("Enter release year: ")
+    val duration = readNextDouble("Enter duration in hours: ")
+
+    if (service.updateMovie(
+            movieId,
+            title,
+            genre,
+            releaseYear,
+            duration
+        )
+    ) {
+        println("Movie updated successfully.")
+    } else {
+        println("Update failed. A movie with that title and release year may already exist.")
+    }
+}
+
+fun updateActor(service: ActorService = actorService) {
+    if (service.getActors().isEmpty()) {
+        println("There are no actors to update.")
+        return
+    }
+
+    println("\n--- Actors ---")
+    service.getActors().forEach { println(it) }
+
+    val actorId = readNextInt("Enter the Actor ID to update: ")
+    val actor = service.findActorById(actorId)
+
+    if (actor == null) {
+        println("Actor not found.")
+        return
+    }
+
+    println("\nEnter the updated actor details:")
+
+    val name = readNextLine("Enter name: ")
+    val dateOfBirth = readNextDOB("Enter date of birth: ")
+
+    if (service.updateActor(actorId, name, dateOfBirth)) {
+        println("Actor updated successfully.")
+    } else {
+        println("Update failed. An actor with that name and date of birth may already exist.")
+    }
+}
+
+fun deleteMenu() {
+    var option: Int
+
+    do {
+        println("""
+
+            > ---------- Delete Menu ----------
+            > |   1) Delete Movie             |
+            > |   2) Delete Actor             |
+            > --------------------------------
+            > |   0) Back to Main Menu        |
+            > ---------------------------------
+        """.trimIndent())
+
+        option = readNextInt("Enter option: ")
+
+        when (option) {
+            1 -> deleteMovie()
+            2 -> deleteActor()
+            0 -> println("Returning to main menu...")
+            else -> println("Invalid option.")
+        }
+
+    } while (option != 0)
+}
+
+fun deleteMovie(
+    service: MovieService = movieService,
+    associationService: MovieActorService = movieActorService
+) {
+    if (service.getMovies().isEmpty()) {
+        println("There are no movies to delete.")
+        return
+    }
+
+    println("\n--- Movies ---")
+    service.getMovies().forEach { println(it) }
+
+    val movieId = readNextInt("Enter the Movie ID to delete: ")
+    val movie = service.findMovieById(movieId)
+
+    if (movie == null) {
+        println("Movie not found.")
+        return
+    }
+
+    println("Are you sure you want to delete '${movie.title}'?")
+    val confirmation = readNextLine("Type YES to confirm: ")
+
+    if (confirmation.equals("YES", ignoreCase = true)) {
+        service.deleteMovie(movieId)
+        associationService.deleteAssociationsForMovie(movieId)
+
+        println("Movie and its actor associations deleted successfully.")
+    } else {
+        println("Deletion cancelled.")
+    }
+}
+
+fun deleteActor(
+    service: ActorService = actorService,
+    associationService: MovieActorService = movieActorService
+) {
+    if (service.getActors().isEmpty()) {
+        println("There are no actors to delete.")
+        return
+    }
+
+    println("\n--- Actors ---")
+    service.getActors().forEach { println(it) }
+
+    val actorId = readNextInt("Enter the Actor ID to delete: ")
+    val actor = service.findActorById(actorId)
+
+    if (actor == null) {
+        println("Actor not found.")
+        return
+    }
+
+    println("Are you sure you want to delete '${actor.name}'?")
+    val confirmation = readNextLine("Type YES to confirm: ")
+
+    if (confirmation.equals("YES", ignoreCase = true)) {
+        service.deleteActor(actorId)
+        associationService.deleteAssociationsForActor(actorId)
+
+        println("Actor and their movie associations deleted successfully.")
+    } else {
+        println("Deletion cancelled.")
     }
 }
 
