@@ -13,6 +13,7 @@ data class Movie(
     override fun toString(): String {
         return """
         ------------------------------
+        | Movie ID: $id
         | Title: $title
         | Genre: $genre
         | Release Year: $releaseYear

@@ -13,9 +13,19 @@ class ActorService(serializerType: Serializer){
 
     fun getActors(): List<Actor> = actors
 
-    fun addActor(actor: Actor) {
+    fun addActor(actor: Actor): Boolean {
+
+        if (actors.any {
+                it.name.equals(actor.name.trim(), ignoreCase = true) &&
+                        it.dateOfBirth == actor.dateOfBirth
+            }) {
+            return false
+        }
+
         actor.id = getId()
         actors.add(actor)
+
+        return true
     }
 
     fun findActorById(actorId: Int): Actor? {

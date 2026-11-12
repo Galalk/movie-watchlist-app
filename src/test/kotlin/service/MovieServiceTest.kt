@@ -124,6 +124,78 @@ class MovieServiceTest {
         fun `returns null when movie ID does not exist`() {
             assertNull(populatedMovieService.findMovieById(99))
         }
+
+        @Test
+        fun `finds movie by trimmed case insensitive title and release year`() {
+            val movie = Movie(title = "The Matrix", releaseYear = 1999)
+            val service = MovieService(JSONSerializer(File(tempDir, "find-movie.json")))
+            assertTrue(service.addMovie(movie))
+
+            assertSame(movie, service.findMovie("  tHe MaTrIx ", 1999))
+        }
+
+        @Test
+        fun `returns null when title or release year does not match`() {
+            val movie = Movie(title = "The Matrix", releaseYear = 1999)
+            val service = MovieService(JSONSerializer(File(tempDir, "find-movie.json")))
+            assertTrue(service.addMovie(movie))
+
+            assertNull(service.findMovie("Unknown", 1999))
+            assertNull(service.findMovie("The Matrix", 2003))
+        }
+    }
+
+    @Nested
+    inner class MovieStatusTests {
+
+        @Test
+        fun `marking an existing movie watched updates it and stores the list`() {
+            val serializer = CapturingSerializer()
+            val service = MovieService(serializer)
+            val movie = Movie(title = "Arrival")
+            assertTrue(service.addMovie(movie))
+
+            assertTrue(service.markMovieAsWatched(movie.id))
+
+            assertTrue(movie.finished)
+            assertSame(service.getMovies(), serializer.writtenObject)
+            assertEquals(1, serializer.writeCalls)
+        }
+
+        @Test
+        fun `marking unknown movie watched returns false without storing`() {
+            val serializer = CapturingSerializer()
+            val service = MovieService(serializer)
+
+            assertFalse(service.markMovieAsWatched(99))
+
+            assertEquals(0, serializer.writeCalls)
+        }
+
+        @Test
+        fun `reverting existing movie to watch updates it and stores the list`() {
+            val serializer = CapturingSerializer()
+            val service = MovieService(serializer)
+            val movie = Movie(title = "Arrival")
+            assertTrue(service.addMovie(movie))
+            movie.finished = true
+
+            assertTrue(service.markMovieAsToWatch(movie.id))
+
+            assertFalse(movie.finished)
+            assertSame(service.getMovies(), serializer.writtenObject)
+            assertEquals(1, serializer.writeCalls)
+        }
+
+        @Test
+        fun `reverting unknown movie returns false without storing`() {
+            val serializer = CapturingSerializer()
+            val service = MovieService(serializer)
+
+            assertFalse(service.markMovieAsToWatch(99))
+
+            assertEquals(0, serializer.writeCalls)
+        }
     }
 
     @Nested
@@ -201,9 +273,11 @@ class MovieServiceTest {
 
     private class CapturingSerializer : Serializer {
         var writtenObject: Any? = null
+        var writeCalls: Int = 0
 
         override fun write(obj: Any?) {
             writtenObject = obj
+            writeCalls++
         }
 
         override fun <T> read(classType: Class<T>): T = error("read should not be called")
