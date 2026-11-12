@@ -1,4 +1,9 @@
-package Utils
+package utils
+
+import java.time.LocalDate
+import java.time.format.DateTimeParseException
+import java.time.format.DateTimeFormatter
+import java.time.format.ResolverStyle
 
 fun readNextLine(prompt: String = ""): String {
     print(prompt)
@@ -52,14 +57,19 @@ fun readNextBoolean(prompt: String = ""): Boolean {
 }
 
 fun readNextDOB(prompt: String): String {
+    val formatter = DateTimeFormatter.ofPattern("dd-MM-uuuu")
+        .withResolverStyle(ResolverStyle.STRICT)
+
     while (true) {
         val dob = readNextLine(prompt)
 
-        if (dob.matches(Regex("\\d{2}-\\d{2}-\\d{4}"))) {
+        try {
+            LocalDate.parse(dob, formatter)
             return dob
-        } else {
-            println("Invalid date format! Please use DD-MM-YYYY.")
+        } catch (e: DateTimeParseException) {
+            println("Invalid date! Please enter a valid date in DD-MM-YYYY format.")
         }
     }
 }
+
 

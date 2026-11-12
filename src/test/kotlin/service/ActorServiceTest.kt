@@ -103,7 +103,7 @@ class ActorServiceTest {
     }
 
     @Nested
-    inner class FindActorTests {
+    inner class SearchActorTests {
 
         @Test
         fun `finds actor by ID`() {
@@ -116,13 +116,34 @@ class ActorServiceTest {
         }
 
         @Test
-        fun `finds actor by name ignoring case`() {
-            assertSame(actor1, populatedActorService.findActorByName("rUsSeLl cRoWe"))
+        fun `searches actor by case insensitive name and exact date of birth`() {
+            assertSame(actor1, populatedActorService.searchActor("rUsSeLl cRoWe", "07-04-1964"))
         }
 
         @Test
-        fun `returns null for unknown name`() {
-            assertNull(populatedActorService.findActorByName("Unknown Actor"))
+        fun `returns null for unknown actor or mismatched date of birth`() {
+            assertNull(populatedActorService.searchActor("Unknown Actor", "01-01-1900"))
+            assertNull(populatedActorService.searchActor("Russell Crowe", "01-01-1900"))
+        }
+    }
+
+    @Nested
+    inner class FilterActorsTests {
+
+        @Test
+        fun `filters actors by partial name ignoring case`() {
+            val secondRussell = Actor(name = "Russell Westbrook", dateOfBirth = "12-11-1988")
+            assertTrue(populatedActorService.addActor(secondRussell))
+
+            assertEquals(
+                listOf(actor1, secondRussell),
+                populatedActorService.filterActorsByName("rUsSeLl")
+            )
+        }
+
+        @Test
+        fun `returns empty list when no actor name matches`() {
+            assertTrue(populatedActorService.filterActorsByName("Unknown").isEmpty())
         }
     }
 

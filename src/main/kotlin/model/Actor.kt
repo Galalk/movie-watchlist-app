@@ -10,6 +10,7 @@ data class Actor(
     override fun toString(): String {
         return """
         ------------------------------
+        | Actor ID: $id
         | Name: $name
         | Date of Birth: $dateOfBirth
         ------------------------------

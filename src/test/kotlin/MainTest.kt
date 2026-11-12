@@ -10,6 +10,7 @@ import java.io.File
 import java.io.PrintStream
 import java.nio.file.Files
 
+
 class MainTest {
 
     @Test
@@ -51,11 +52,148 @@ class MainTest {
     }
 
     @Test
-    fun `runMenu opens watch status submenu for option 5`() {
-        val output = captureOutput("5\n0\n0\n") { runMenu() }
+    fun `runMenu opens watch status submenu for option 6`() {
+        val output = captureOutput("6\n0\n0\n") { runMenu() }
 
         assertTrue(output.contains("Change Movie to Watched"))
         assertTrue(output.contains("Exiting App"))
+    }
+
+    @Test
+    fun `runMenu opens search submenu for option 1`() {
+        val output = captureOutput("1\n0\n0\n") { runMenu() }
+
+        assertTrue(output.contains("Search for Movie"))
+        assertTrue(output.contains("Exiting App"))
+    }
+
+    @Test
+    fun `runMenu opens list submenu for option 5`() {
+        val output = captureOutput("5\n0\n0\n") { runMenu() }
+
+        assertTrue(output.contains("View All Movies"))
+        assertTrue(output.contains("Exiting App"))
+    }
+
+    @Test
+    fun `runMenu routes add movie and actor to their updated options`() {
+        val title = "RunMenuMovie-${System.nanoTime()}"
+        val actorName = "RunMenuActor-${System.nanoTime()}"
+        val dateOfBirth = "17-08-1985"
+        val input = listOf(
+            "2", title, "Drama", "2021", "2.0",
+            "3", actorName, dateOfBirth,
+            "0"
+        ).joinToString("\n") + "\n"
+
+        val output = captureOutput(input) { runMenu() }
+
+        assertTrue(output.contains("Movie successfully added to backlog!"))
+        assertTrue(output.contains("Actor successfully added!"))
+        assertTrue(movieService.searchMovie(title, 2021) != null)
+        assertTrue(actorService.searchActor(actorName, dateOfBirth) != null)
+    }
+
+    @Test
+    fun `runMenu routes actor association to option 4`() {
+        val movie = Movie(title = "RunMenuLink-${System.nanoTime()}")
+        val actorName = "RunMenuLinkActor-${System.nanoTime()}"
+        val dateOfBirth = "17-08-1985"
+        assertTrue(movieService.addMovie(movie))
+        assertTrue(actorService.addActor(Actor(name = actorName, dateOfBirth = dateOfBirth)))
+        val input = "4\n${movie.id}\n$actorName\n$dateOfBirth\n0\n"
+
+        val output = captureOutput(input) { runMenu() }
+
+        assertTrue(output.contains("Actor successfully added to movie"))
+        assertTrue(output.contains("Exiting App"))
+    }
+
+    @Test
+    fun `searchMenu dispatches all search and filter options`() {
+        val title = "SearchMenuMovie-${System.nanoTime()}"
+        val genre = "SearchGenre-${System.nanoTime()}"
+        val actorName = "SearchMenuActor-${System.nanoTime()}"
+        val dateOfBirth = "17-08-1985"
+        assertTrue(movieService.addMovie(Movie(title = title, genre = genre, releaseYear = 2021)))
+        assertTrue(actorService.addActor(Actor(name = actorName, dateOfBirth = dateOfBirth)))
+        val partialActorName = actorName.take(10)
+        val input = listOf(
+            "1", title, "2021",
+            "2", actorName, dateOfBirth,
+            "3", genre,
+            "4", partialActorName,
+            "0"
+        ).joinToString("\n") + "\n"
+
+        val output = runSearchMenu(input)
+
+        assertTrue(output.contains(title))
+        assertTrue(output.contains(actorName))
+        assertTrue(output.contains("Search Menu"))
+    }
+
+    @Test
+    fun `searchMenu handles invalid selection and returns to main menu`() {
+        val output = runSearchMenu("99\n0\n")
+
+        assertTrue(output.contains("Invalid option"))
+        assertTrue(output.contains("Returning to main menu"))
+    }
+
+    @Test
+    fun `search functions and filters handle no matches`() {
+        val unique = "NoMatch-${System.nanoTime()}"
+        val input = listOf(
+            "1", unique, "2021",
+            "2", unique, "17-08-1985",
+            "3", unique,
+            "4", unique,
+            "0"
+        ).joinToString("\n") + "\n"
+
+        val output = runSearchMenu(input)
+
+        assertTrue(output.contains("No movies found for this genre."))
+        assertTrue(output.contains("No actors found."))
+        assertFalse(output.contains("Movie ID:"))
+        assertFalse(output.contains("Date of Birth:"))
+    }
+
+    @Test
+    fun `addActorToMovie reports when movie ID is unknown`() {
+        val output = runAddActorToMovie("2147483647\n")
+
+        assertTrue(output.contains("Movie not found"))
+    }
+
+    @Test
+    fun `addActorToMovie searches actor by name and date of birth`() {
+        val movie = Movie(title = "ActorLinkMovie-${System.nanoTime()}")
+        val actorName = "ActorLink-${System.nanoTime()}"
+        val dateOfBirth = "17-08-1985"
+        val actor = Actor(name = actorName, dateOfBirth = dateOfBirth)
+        assertTrue(movieService.addMovie(movie))
+        assertTrue(actorService.addActor(actor))
+
+        val input = "${movie.id}\n$actorName\n$dateOfBirth\n"
+        val firstOutput = runAddActorToMovie(input)
+        val secondOutput = runAddActorToMovie(input)
+
+        assertTrue(firstOutput.contains("Actor successfully added to movie"))
+        assertTrue(secondOutput.contains("This actor is already associated with this movie"))
+    }
+
+    @Test
+    fun `addActorToMovie reports when name and date of birth do not match`() {
+        val movie = Movie(title = "ActorNotFoundMovie-${System.nanoTime()}")
+        val actorName = "ActorWrongDOB-${System.nanoTime()}"
+        assertTrue(movieService.addMovie(movie))
+        assertTrue(actorService.addActor(Actor(name = actorName, dateOfBirth = "17-08-1985")))
+
+        val output = runAddActorToMovie("${movie.id}\n$actorName\n18-08-1985\n")
+
+        assertTrue(output.contains("Actor not found"))
     }
 
     @Test
@@ -64,7 +202,7 @@ class MainTest {
         val dateOfBirth = "25-03-1990"
 
         val output = runAddActor("$name\n$dateOfBirth\n")
-        val actor = actorService.findActorByName(name)
+        val actor = actorService.searchActor(name, dateOfBirth)
 
         assertTrue(output.contains("Date of Birth (DD-MM-YYYY)"))
         assertTrue(output.contains("Actor successfully added!"))
@@ -238,6 +376,14 @@ class MainTest {
 
     private fun runAddActor(input: String): String {
         return captureOutput(input) { addActor() }
+    }
+
+    private fun runSearchMenu(input: String): String {
+        return captureOutput(input) { searchMenu() }
+    }
+
+    private fun runAddActorToMovie(input: String): String {
+        return captureOutput(input) { addActorToMovie() }
     }
 
     private fun runStatusMenu(input: String): String {
