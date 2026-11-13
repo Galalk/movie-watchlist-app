@@ -607,7 +607,7 @@ fun deleteMenu() {
         println(
             """
 
-            > -------------  Delete ---------------
+            > ---------  Delete or Remove ---------
             > |   1) Delete a Movie               |
             > |   2) Delete an Actor              | 
             > |   3) Remove an Actor from a Movie |
