@@ -10,13 +10,18 @@ This project was developed as part of my Software Development Tools module at SE
 
 ## Features
 
-- Add movies to the collection.
-- Add actors to the collection.
-- Associate actors with movies.
+- Add movies to the collection
+- Add actors to the collection
+- Associate actors with movies
+- Remove actors from movies
 - Assign unique IDs to movies and actors.
-- Validate user input to prevent invalid entries.
-- Save and load data using JSON persistence.
-- JUnit tests to check that the main functionality works correctly.
+- Update movie watch status
+- Search and filter
+- Update and delete
+- View multiple statistics reports for every data model
+- Validate user input to prevent invalid entries
+- Save and load data using JSON persistence
+- JUnit tests to check that the main functionality works correctly
 
 ## Technologies Used
 
