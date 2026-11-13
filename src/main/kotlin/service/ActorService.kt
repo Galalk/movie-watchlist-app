@@ -5,6 +5,14 @@ import persistance.Serializer
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 
+/**
+ * This class manages a list of actors and provides functionality for adding, updating, deleting,
+ * and filtering actors. It uses a [Serializer] to load and store the movies persistently.
+ *
+ * @property serializer A serializer instance for reading and writing the movies.
+ * @constructor Initializes the MovieService with the specified [serializerType].
+ */
+
 class ActorService(
     serializerType: Serializer,
 ) {
@@ -77,12 +85,16 @@ class ActorService(
         }
 
     fun numberOfActors() = actors.size
-    fun oldestActor() = actors.minByOrNull {
-        LocalDate.parse(it.dateOfBirth, DateTimeFormatter.ofPattern("dd-MM-uuuu"))
-    }
-    fun youngestActor() = actors.maxByOrNull {
-        LocalDate.parse(it.dateOfBirth, DateTimeFormatter.ofPattern("dd-MM-uuuu"))
-    }
+
+    fun oldestActor() =
+        actors.minByOrNull {
+            LocalDate.parse(it.dateOfBirth, DateTimeFormatter.ofPattern("dd-MM-uuuu"))
+        }
+
+    fun youngestActor() =
+        actors.maxByOrNull {
+            LocalDate.parse(it.dateOfBirth, DateTimeFormatter.ofPattern("dd-MM-uuuu"))
+        }
 
     fun load() {
         val array = serializer.read(Array<Actor>::class.java)

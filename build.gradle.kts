@@ -36,7 +36,6 @@ ktlint {
     version.set("1.8.0")
 }
 
-
 tasks.test {
     useJUnitPlatform()
     // report is always generated after tests run
@@ -58,5 +57,3 @@ tasks.jar {
             .map { zipTree(it) }
     })
 }
-
-

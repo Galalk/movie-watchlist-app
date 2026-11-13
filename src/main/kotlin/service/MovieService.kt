@@ -111,8 +111,11 @@ class MovieService(
     }
 
     fun numberOfMovies() = movies.size
-    fun numberOfWatchedMovies() = movies.count { it.finished}
-    fun numberOfToWatchMovies() = movies.count { !it.finished}
+
+    fun numberOfWatchedMovies() = movies.count { it.finished }
+
+    fun numberOfToWatchMovies() = movies.count { !it.finished }
+
     fun percentageWatched(): Double {
         if (movies.isEmpty()) return 0.0
 
