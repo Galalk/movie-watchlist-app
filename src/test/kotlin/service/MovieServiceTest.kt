@@ -349,6 +349,48 @@ class MovieServiceTest {
     }
 
     @Nested
+    inner class ReportTests {
+        @Test
+        fun `empty movie collection reports zero counts and percentage`() {
+            assertEquals(0, emptyMovieService.numberOfMovies())
+            assertEquals(0, emptyMovieService.numberOfWatchedMovies())
+            assertEquals(0, emptyMovieService.numberOfToWatchMovies())
+            assertEquals(0.0, emptyMovieService.percentageWatched())
+        }
+
+        @Test
+        fun `reports movie counts and watched percentage`() {
+            val service = MovieService(JSONSerializer(File(tempDir, "movie-report.json")))
+            val watchedMovie = Movie(title = "Watched", releaseYear = 2000)
+            val firstUnwatchedMovie = Movie(title = "Unwatched One", releaseYear = 2001)
+            val secondUnwatchedMovie = Movie(title = "Unwatched Two", releaseYear = 2002)
+            assertTrue(service.addMovie(watchedMovie))
+            assertTrue(service.addMovie(firstUnwatchedMovie))
+            assertTrue(service.addMovie(secondUnwatchedMovie))
+            watchedMovie.finished = true
+
+            assertEquals(3, service.numberOfMovies())
+            assertEquals(1, service.numberOfWatchedMovies())
+            assertEquals(2, service.numberOfToWatchMovies())
+            assertEquals(100.0 / 3.0, service.percentageWatched(), 0.0001)
+        }
+
+        @Test
+        fun `all watched movies report one hundred percent watched`() {
+            val service = MovieService(JSONSerializer(File(tempDir, "all-watched-report.json")))
+            val firstMovie = Movie(title = "First", releaseYear = 2000)
+            val secondMovie = Movie(title = "Second", releaseYear = 2001)
+            assertTrue(service.addMovie(firstMovie))
+            assertTrue(service.addMovie(secondMovie))
+            firstMovie.finished = true
+            secondMovie.finished = true
+
+            assertEquals(100.0, service.percentageWatched())
+            assertEquals(0, service.numberOfToWatchMovies())
+        }
+    }
+
+    @Nested
     inner class PersistenceTests {
         @Test
         fun `saving and loading empty movies does not crash`() {

@@ -236,6 +236,31 @@ class ActorServiceTest {
     }
 
     @Nested
+    inner class ReportTests {
+        @Test
+        fun `empty actor collection reports zero and no oldest or youngest actor`() {
+            assertEquals(0, emptyActorService.numberOfActors())
+            assertNull(emptyActorService.oldestActor())
+            assertNull(emptyActorService.youngestActor())
+        }
+
+        @Test
+        fun `reports oldest and youngest actors from their dates of birth`() {
+            val service = ActorService(JSONSerializer(File(tempDir, "actor-report.json")))
+            val oldest = Actor(name = "Oldest", dateOfBirth = "10-05-1940")
+            val middle = Actor(name = "Middle", dateOfBirth = "20-06-1970")
+            val youngest = Actor(name = "Youngest", dateOfBirth = "30-07-2000")
+            assertTrue(service.addActor(middle))
+            assertTrue(service.addActor(youngest))
+            assertTrue(service.addActor(oldest))
+
+            assertEquals(3, service.numberOfActors())
+            assertSame(oldest, service.oldestActor())
+            assertSame(youngest, service.youngestActor())
+        }
+    }
+
+    @Nested
     inner class PersistenceTests {
         @Test
         fun `saving and loading empty actors does not crash`() {

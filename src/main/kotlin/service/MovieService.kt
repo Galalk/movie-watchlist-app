@@ -110,6 +110,15 @@ class MovieService(
         return true
     }
 
+    fun numberOfMovies() = movies.size
+    fun numberOfWatchedMovies() = movies.count { it.finished}
+    fun numberOfToWatchMovies() = movies.count { !it.finished}
+    fun percentageWatched(): Double {
+        if (movies.isEmpty()) return 0.0
+
+        return (numberOfWatchedMovies().toDouble() / numberOfMovies()) * 100
+    }
+
     fun load() {
         val array = serializer.read(Array<Movie>::class.java)
         movies = array.toCollection(ArrayList())
