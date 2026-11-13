@@ -3,17 +3,14 @@ package model
 data class Actor(
     var id: Int = 0,
     var name: String = "",
-    var dateOfBirth: String = ""
-)
-
-{
-    override fun toString(): String {
-        return """
+    var dateOfBirth: String = "",
+) {
+    override fun toString(): String =
+        """
         ------------------------------
         | Actor ID: $id
         | Name: $name
         | Date of Birth: $dateOfBirth
         ------------------------------
-    """.trimIndent()
-    }
+        """.trimIndent()
 }

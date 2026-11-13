@@ -1,18 +1,21 @@
 
 package service
 
-import Persistance.JSONSerializer
-import Persistance.Serializer
 import model.Actor
-import org.junit.jupiter.api.Assertions.*
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertFalse
+import org.junit.jupiter.api.Assertions.assertNull
+import org.junit.jupiter.api.Assertions.assertSame
+import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
+import persistance.JSONSerializer
+import persistance.Serializer
 import java.io.File
 
 class ActorServiceTest {
-
     @TempDir
     lateinit var tempDir: File
 
@@ -24,13 +27,15 @@ class ActorServiceTest {
 
     @BeforeEach
     fun setUp() {
-        emptyActorService = ActorService(
-            JSONSerializer(File(tempDir, "empty-actors.json"))
-        )
+        emptyActorService =
+            ActorService(
+                JSONSerializer(File(tempDir, "empty-actors.json")),
+            )
 
-        populatedActorService = ActorService(
-            JSONSerializer(File(tempDir, "actors.json"))
-        )
+        populatedActorService =
+            ActorService(
+                JSONSerializer(File(tempDir, "actors.json")),
+            )
 
         actor1 = Actor(0, "Russell Crowe", "07-04-1964")
         actor2 = Actor(0, "Tom Cruise", "03-07-1962")
@@ -41,7 +46,6 @@ class ActorServiceTest {
 
     @Nested
     inner class AddActorTests {
-
         @Test
         fun `adding actor increases collection size`() {
             assertEquals(0, emptyActorService.getActors().size)
@@ -72,7 +76,98 @@ class ActorServiceTest {
 
             assertEquals("Russell Crowe", retrievedActor.name)
         }
+    }
 
+    @Nested
+    inner class SearchActorTests {
+        @Test
+        fun `finds actor by ID`() {
+            assertSame(actor2, populatedActorService.findActorById(1))
+        }
+
+        @Test
+        fun `returns null for unknown ID`() {
+            assertNull(populatedActorService.findActorById(99))
+        }
+
+        @Test
+        fun `searches actor by case insensitive name and exact date of birth`() {
+            assertSame(actor1, populatedActorService.searchActor("rUsSeLl cRoWe", "07-04-1964"))
+        }
+
+        @Test
+        fun `returns null for unknown actor or mismatched date of birth`() {
+            assertNull(populatedActorService.searchActor("Unknown Actor", "01-01-1900"))
+            assertNull(populatedActorService.searchActor("Russell Crowe", "01-01-1900"))
+        }
+    }
+
+    @Nested
+    inner class FilterActorsTests {
+        @Test
+        fun `filters actors by partial name ignoring case`() {
+            val secondRussell = Actor(name = "Russell Westbrook", dateOfBirth = "12-11-1988")
+            assertTrue(populatedActorService.addActor(secondRussell))
+
+            assertEquals(
+                listOf(actor1, secondRussell),
+                populatedActorService.filterActorsByName("rUsSeLl"),
+            )
+        }
+
+        @Test
+        fun `returns empty list when no actor name matches`() {
+            assertTrue(populatedActorService.filterActorsByName("Unknown").isEmpty())
+        }
+    }
+
+    @Nested
+    inner class UpdateActorTests {
+        @Test
+        fun `updates actor name and date of birth`() {
+            val service = ActorService(JSONSerializer(File(tempDir, "update-actor.json")))
+            val actor = Actor(name = "Old Name", dateOfBirth = "01-01-1980")
+            assertTrue(service.addActor(actor))
+
+            assertTrue(service.updateActor(actor.id, " New Name ", "02-02-1981"))
+
+            assertEquals("New Name", actor.name)
+            assertEquals("02-02-1981", actor.dateOfBirth)
+            assertEquals(0, actor.id)
+        }
+
+        @Test
+        fun `updating unknown actor returns false`() {
+            val service = ActorService(JSONSerializer(File(tempDir, "missing-actor-update.json")))
+
+            assertFalse(service.updateActor(99, "Name", "01-01-1980"))
+        }
+    }
+
+    @Nested
+    inner class DeleteActorTests {
+        @Test
+        fun `deletes existing actor`() {
+            val service = ActorService(JSONSerializer(File(tempDir, "delete-actor.json")))
+            val actor = Actor(name = "Delete Me")
+            assertTrue(service.addActor(actor))
+
+            assertTrue(service.deleteActor(actor.id))
+
+            assertNull(service.findActorById(actor.id))
+            assertTrue(service.getActors().isEmpty())
+        }
+
+        @Test
+        fun `deleting unknown actor returns false`() {
+            val service = ActorService(JSONSerializer(File(tempDir, "missing-actor-delete.json")))
+
+            assertFalse(service.deleteActor(99))
+        }
+    }
+
+    @Nested
+    inner class ValidationTest {
         @Test
         fun `adding actor with same name and date of birth is rejected ignoring case`() {
             val service = ActorService(JSONSerializer(File(tempDir, "duplicates.json")))
@@ -100,68 +195,6 @@ class ActorServiceTest {
             assertEquals(2, service.getActors().size)
             assertEquals(1, differentPerson.id)
         }
-    }
-
-    @Nested
-    inner class SearchActorTests {
-
-        @Test
-        fun `finds actor by ID`() {
-            assertSame(actor2, populatedActorService.findActorById(1))
-        }
-
-        @Test
-        fun `returns null for unknown ID`() {
-            assertNull(populatedActorService.findActorById(99))
-        }
-
-        @Test
-        fun `searches actor by case insensitive name and exact date of birth`() {
-            assertSame(actor1, populatedActorService.searchActor("rUsSeLl cRoWe", "07-04-1964"))
-        }
-
-        @Test
-        fun `returns null for unknown actor or mismatched date of birth`() {
-            assertNull(populatedActorService.searchActor("Unknown Actor", "01-01-1900"))
-            assertNull(populatedActorService.searchActor("Russell Crowe", "01-01-1900"))
-        }
-    }
-
-    @Nested
-    inner class FilterActorsTests {
-
-        @Test
-        fun `filters actors by partial name ignoring case`() {
-            val secondRussell = Actor(name = "Russell Westbrook", dateOfBirth = "12-11-1988")
-            assertTrue(populatedActorService.addActor(secondRussell))
-
-            assertEquals(
-                listOf(actor1, secondRussell),
-                populatedActorService.filterActorsByName("rUsSeLl")
-            )
-        }
-
-        @Test
-        fun `returns empty list when no actor name matches`() {
-            assertTrue(populatedActorService.filterActorsByName("Unknown").isEmpty())
-        }
-    }
-
-    @Nested
-    inner class UpdateActorTests {
-
-        @Test
-        fun `updates actor name and date of birth`() {
-            val service = ActorService(JSONSerializer(File(tempDir, "update-actor.json")))
-            val actor = Actor(name = "Old Name", dateOfBirth = "01-01-1980")
-            assertTrue(service.addActor(actor))
-
-            assertTrue(service.updateActor(actor.id, " New Name ", "02-02-1981"))
-
-            assertEquals("New Name", actor.name)
-            assertEquals("02-02-1981", actor.dateOfBirth)
-            assertEquals(0, actor.id)
-        }
 
         @Test
         fun `rejects update that would duplicate another actor`() {
@@ -178,46 +211,40 @@ class ActorServiceTest {
         }
 
         @Test
-        fun `updating unknown actor returns false`() {
-            val service = ActorService(JSONSerializer(File(tempDir, "missing-actor-update.json")))
+        fun `allows update when another actor has the same name but different date of birth`() {
+            val service = ActorService(JSONSerializer(File(tempDir, "same-name-different-dob.json")))
+            val original = Actor(name = "Chris Evans", dateOfBirth = "13-06-1981")
+            assertTrue(service.addActor(original))
+            assertTrue(service.addActor(Actor(name = "Chris Evans", dateOfBirth = "20-02-1990")))
 
-            assertFalse(service.updateActor(99, "Name", "01-01-1980"))
-        }
-    }
+            assertTrue(service.updateActor(original.id, "Chris Evans", "15-07-1981"))
 
-    @Nested
-    inner class DeleteActorTests {
-
-        @Test
-        fun `deletes existing actor`() {
-            val service = ActorService(JSONSerializer(File(tempDir, "delete-actor.json")))
-            val actor = Actor(name = "Delete Me")
-            assertTrue(service.addActor(actor))
-
-            assertTrue(service.deleteActor(actor.id))
-
-            assertNull(service.findActorById(actor.id))
-            assertTrue(service.getActors().isEmpty())
+            assertEquals("15-07-1981", original.dateOfBirth)
         }
 
         @Test
-        fun `deleting unknown actor returns false`() {
-            val service = ActorService(JSONSerializer(File(tempDir, "missing-actor-delete.json")))
+        fun `allows update when another actor has a different name`() {
+            val service = ActorService(JSONSerializer(File(tempDir, "different-name-update.json")))
+            val original = Actor(name = "First Person", dateOfBirth = "01-01-1980")
+            assertTrue(service.addActor(original))
+            assertTrue(service.addActor(Actor(name = "Second Person", dateOfBirth = "02-02-1981")))
 
-            assertFalse(service.deleteActor(99))
+            assertTrue(service.updateActor(original.id, "Third Person", "03-03-1982"))
+
+            assertEquals("Third Person", original.name)
         }
     }
 
     @Nested
     inner class PersistenceTests {
-
         @Test
         fun `saving and loading empty actors does not crash`() {
             emptyActorService.store()
 
-            val loadedService = ActorService(
-                JSONSerializer(File(tempDir, "empty-actors.json"))
-            )
+            val loadedService =
+                ActorService(
+                    JSONSerializer(File(tempDir, "empty-actors.json")),
+                )
 
             loadedService.load()
 
@@ -228,9 +255,10 @@ class ActorServiceTest {
         fun `saving and loading actors preserves data`() {
             populatedActorService.store()
 
-            val loadedService = ActorService(
-                JSONSerializer(File(tempDir, "actors.json"))
-            )
+            val loadedService =
+                ActorService(
+                    JSONSerializer(File(tempDir, "actors.json")),
+                )
 
             loadedService.load()
 
@@ -245,9 +273,10 @@ class ActorServiceTest {
         fun `loading actors restores next available ID`() {
             populatedActorService.store()
 
-            val loadedService = ActorService(
-                JSONSerializer(File(tempDir, "actors.json"))
-            )
+            val loadedService =
+                ActorService(
+                    JSONSerializer(File(tempDir, "actors.json")),
+                )
 
             loadedService.load()
 
@@ -255,6 +284,34 @@ class ActorServiceTest {
             assertTrue(loadedService.addActor(newActor))
 
             assertEquals(2, newActor.id)
+        }
+
+        @Test
+        fun `loading one actor restores ID after that actor`() {
+            val serializer = FixedReadSerializer(arrayOf(Actor(id = 42, name = "Loaded")))
+            val service = ActorService(serializer)
+
+            service.load()
+            val nextActor = Actor(name = "Next")
+            assertTrue(service.addActor(nextActor))
+
+            assertEquals(43, nextActor.id)
+        }
+
+        @Test
+        fun `loading actors in descending ID order restores ID after the maximum`() {
+            val loadedActors =
+                arrayOf(
+                    Actor(id = 42, name = "Higher ID"),
+                    Actor(id = 7, name = "Lower ID"),
+                )
+            val service = ActorService(FixedReadSerializer(loadedActors))
+
+            service.load()
+            val nextActor = Actor(name = "Next")
+            assertTrue(service.addActor(nextActor))
+
+            assertEquals(43, nextActor.id)
         }
 
         @Test
@@ -277,5 +334,14 @@ class ActorServiceTest {
         }
 
         override fun <T> read(classType: Class<T>): T = error("read should not be called")
+    }
+
+    private class FixedReadSerializer(
+        private val actors: Array<Actor>,
+    ) : Serializer {
+        override fun write(obj: Any?) = Unit
+
+        @Suppress("UNCHECKED_CAST")
+        override fun <T> read(classType: Class<T>): T = actors as T
     }
 }
