@@ -2,6 +2,8 @@ package service
 
 import model.Actor
 import persistance.Serializer
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
 
 class ActorService(
     serializerType: Serializer,
@@ -73,6 +75,14 @@ class ActorService(
         actors.filter {
             it.name.contains(name, ignoreCase = true)
         }
+
+    fun numberOfActors() = actors.size
+    fun oldestActor() = actors.minByOrNull {
+        LocalDate.parse(it.dateOfBirth, DateTimeFormatter.ofPattern("dd-MM-uuuu"))
+    }
+    fun youngestActor() = actors.maxByOrNull {
+        LocalDate.parse(it.dateOfBirth, DateTimeFormatter.ofPattern("dd-MM-uuuu"))
+    }
 
     fun load() {
         val array = serializer.read(Array<Actor>::class.java)

@@ -1,0 +1,53 @@
+
+[
+  {
+    "id": 0,
+    "name": "Christian Bale",
+    "dateOfBirth": "30-01-1974"
+  },
+  {
+    "id": 1,
+    "name": "Leonardo DiCaprio",
+    "dateOfBirth": "11-11-1974"
+  },
+  {
+    "id": 2,
+    "name": "Joseph Gordon-Levitt",
+    "dateOfBirth": "17-02-1981"
+  },
+  {
+    "id": 3,
+    "name": "Matthew McConaughey",
+    "dateOfBirth": "04-11-1969"
+  },
+  {
+    "id": 4,
+    "name": "Morgan Freeman",
+    "dateOfBirth": "01-06-1937"
+  },
+  {
+    "id": 5,
+    "name": "John Travolta",
+    "dateOfBirth": "18-02-1954"
+  },
+  {
+    "id": 6,
+    "name": "Keanu Reeves",
+    "dateOfBirth": "02-09-1964"
+  },
+  {
+    "id": 7,
+    "name": "Russell Crowe",
+    "dateOfBirth": "07-04-1964"
+  },
+  {
+    "id": 8,
+    "name": "Joaquin Phoenix",
+    "dateOfBirth": "28-10-1974"
+  },
+  {
+    "id": 9,
+    "name": "Kate Winslet",
+    "dateOfBirth": "05-10-1975"
+  }
+]

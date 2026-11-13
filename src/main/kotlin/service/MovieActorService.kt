@@ -38,6 +38,18 @@ class MovieActorService(
             it.actorId == actorId
         }
 
+    fun numberOfMoviesPerActor(actorId: Int) =
+        movieActors.count { it.actorId == actorId }
+    fun movieWithMostActors() =
+        movieActors.groupingBy { it.movieId }
+            .eachCount()
+            .maxByOrNull { it.value }
+    fun averageActorsPerMovie(totalMovies: Int): Double {
+        if (totalMovies == 0) return 0.0
+
+        return movieActors.size.toDouble() / totalMovies
+    }
+
     fun load() {
         val array = serializer.read(Array<MovieActor>::class.java)
         movieActors = array.toCollection(ArrayList())

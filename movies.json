@@ -1,0 +1,83 @@
+
+[
+  {
+    "id": 0,
+    "title": "The Dark Knight",
+    "genre": "Action",
+    "releaseYear": 2008,
+    "duration": 2.32,
+    "finished": true
+  },
+  {
+    "id": 1,
+    "title": "Inception",
+    "genre": "Sci-Fi",
+    "releaseYear": 2010,
+    "duration": 2.48,
+    "finished": false
+  },
+  {
+    "id": 2,
+    "title": "Interstellar",
+    "genre": "Sci-Fi",
+    "releaseYear": 2014,
+    "duration": 2.49,
+    "finished": false
+  },
+  {
+    "id": 3,
+    "title": "The Shawshank Redemption",
+    "genre": "Drama",
+    "releaseYear": 1994,
+    "duration": 2.22,
+    "finished": true
+  },
+  {
+    "id": 4,
+    "title": "Pulp Fiction",
+    "genre": "Crime",
+    "releaseYear": 1994,
+    "duration": 2.58,
+    "finished": true
+  },
+  {
+    "id": 5,
+    "title": "The Matrix",
+    "genre": "Sci-Fi",
+    "releaseYear": 1999,
+    "duration": 2.16,
+    "finished": false
+  },
+  {
+    "id": 6,
+    "title": "Gladiator",
+    "genre": "Action",
+    "releaseYear": 2000,
+    "duration": 2.35,
+    "finished": true
+  },
+  {
+    "id": 7,
+    "title": "Joker",
+    "genre": "Drama",
+    "releaseYear": 2019,
+    "duration": 2.02,
+    "finished": false
+  },
+  {
+    "id": 8,
+    "title": "Titanic",
+    "genre": "Romance",
+    "releaseYear": 1997,
+    "duration": 3.15,
+    "finished": false
+  },
+  {
+    "id": 9,
+    "title": "The Departed",
+    "genre": "Crime",
+    "releaseYear": 2006,
+    "duration": 2.32,
+    "finished": true
+  }
+]

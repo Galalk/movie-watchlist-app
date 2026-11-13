@@ -38,6 +38,7 @@ fun mainMenu(): Int {
          > |     6) Change Movie Watch Status       |
          > |     7) Update Movie or Actor           |
          > |     8) Delete Movie or Actor           |
+         > |     9) View Reports                    |
          > ------------------------------------------
          > |    20) Save                            |
          > |    21) Load                            |
@@ -62,11 +63,12 @@ fun runMenu() {
             6 -> changeMovieStatus()
             7 -> updateMenu()
             8 -> deleteMenu()
+            9 -> reportMenu()
             20 -> save()
             21 -> load()
             0 -> {
                 println("Exiting App")
-                logger.info { "Movie Backlog Tracker Exiting" }
+                logger.info { " Exiting Movie Backlog Tracker" }
             }
             else -> println("Invalid Option")
         }
@@ -74,6 +76,8 @@ fun runMenu() {
 }
 
 fun searchMenu() {
+    logger.info { "Search menu opened" }
+
     var option: Int
 
     do {
@@ -97,7 +101,11 @@ fun searchMenu() {
             2 -> searchActor()
             3 -> filterMoviesByGenre()
             4 -> filterActorsByName()
-            0 -> println("Returning to main menu...")
+            0 -> {
+                logger.info { "Exiting search menu" }
+                println("Returning to Main Menu")
+
+            }
             else -> println("Invalid option")
         }
     } while (option != 0)
@@ -199,6 +207,8 @@ fun addActorToMovie() {
 }
 
 fun listAll() {
+    logger.info { "List menu opened" }
+
     var option: Int
 
     do {
@@ -224,13 +234,19 @@ fun listAll() {
                     .getMovies()
                     .filter { it.finished }
                     .forEach { println(it) }
-            0 -> println("Returning to main menu")
+            0 -> {
+                logger.info { "Exiting list menu" }
+                println("Returning to Main Menu")
+
+            }
             else -> println("Invalid option entered: $option")
         }
     } while (option != 0)
 }
 
 fun changeMovieStatus() {
+    logger.info { "Movie status menu opened" }
+
     var option: Int
 
     do {
@@ -250,7 +266,11 @@ fun changeMovieStatus() {
         when (option) {
             1 -> addMovieToWatched()
             2 -> revertMovieStatus()
-            0 -> println("Returning to main menu...")
+            0 -> {
+                logger.info { "Exiting movie status menu" }
+                println("Returning to Main Menu")
+
+            }
             else -> println("Invalid option!")
         }
     } while (option != 0)
@@ -297,6 +317,8 @@ fun revertMovieStatus() {
 }
 
 fun updateMenu() {
+    logger.info { "Update menu opened" }
+
     var option: Int
 
     do {
@@ -317,7 +339,11 @@ fun updateMenu() {
         when (option) {
             1 -> updateMovie()
             2 -> updateActor()
-            0 -> println("Returning to main menu...")
+            0 -> {
+                logger.info { "Exiting update menu" }
+                println("Returning to Main Menu")
+
+            }
             else -> println("Invalid option.")
         }
     } while (option != 0)
@@ -347,14 +373,7 @@ fun updateMovie(service: MovieService = movieService) {
     val releaseYear = readNextYear("Enter release year: ")
     val duration = readNextDouble("Enter duration in hours: ")
 
-    if (service.updateMovie(
-            movieId,
-            title,
-            genre,
-            releaseYear,
-            duration,
-        )
-    ) {
+    if (service.updateMovie(movieId, title, genre, releaseYear, duration,)) {
         println("Movie updated successfully.")
     } else {
         println("Update failed. A movie with that title and release year may already exist.")
@@ -391,6 +410,8 @@ fun updateActor(service: ActorService = actorService) {
 }
 
 fun deleteMenu() {
+    logger.info { "Delete menu opened" }
+
     var option: Int
 
     do {
@@ -411,7 +432,11 @@ fun deleteMenu() {
         when (option) {
             1 -> deleteMovie()
             2 -> deleteActor()
-            0 -> println("Returning to main menu...")
+            0 -> {
+                logger.info { "Exiting delete menu" }
+                println("Returning to Main Menu")
+
+            }
             else -> println("Invalid option.")
         }
     } while (option != 0)
@@ -483,13 +508,91 @@ fun deleteActor(
     }
 }
 
+fun reportMenu() {
+    logger.info { "Report menu opened" }
+
+    var option: Int
+
+    do {
+        println(
+            """
+
+            > ---------- Report Menu ----------
+            > |   1) Movie Report             |
+            > |   2) Actor Report             |
+            > |   3) Movie and Actor Report   |
+            > --------------------------------
+            > |   0) Back to Main Menu        |
+            > ---------------------------------
+            """.trimIndent(),
+        )
+
+        option = readNextInt("Enter option: ")
+
+        when (option) {
+            1 -> movieReport()
+            2 -> actorReport()
+            3 -> movieActorReport()
+            0 -> {
+                logger.info { "Exiting report menu" }
+                println("Returning to Main Menu")
+
+            }
+            else -> println("Invalid option.")
+        }
+    } while (option != 0)
+}
+
+fun movieReport(){
+    println("""
+        ----- Movie Report -----
+          Total Movies:      ${movieService.numberOfMovies()}
+          Watched Movies:  ${movieService.numberOfWatchedMovies()}
+          Unwatched Movies: ${movieService.numberOfToWatchMovies()}
+          Percentage Watched: ${"%.2f".format(movieService.percentageWatched())}%
+        ------------------------        
+    """.trimIndent())
+}
+
+fun actorReport() {
+    val oldest = actorService.oldestActor()
+    val youngest = actorService.youngestActor()
+
+    println("""
+        ----- Actor Report -----
+          Total Actors: ${actorService.numberOfActors()}
+          Oldest Actor: ${oldest?.name ?: "N/A"} (${oldest?.dateOfBirth ?: "N/A"})
+          Youngest Actor: ${youngest?.name ?: "N/A"} (${youngest?.dateOfBirth ?: "N/A"})
+        ------------------------
+    """.trimIndent())
+}
+
+fun movieActorReport() {
+    val movieWithMostActors = movieActorService.movieWithMostActors()
+    val averageActors = movieActorService.averageActorsPerMovie(movieService.numberOfMovies())
+    val movie = movieWithMostActors?.key?.let {
+        movieService.findMovieById(it)
+    }
+
+    println("""
+        ----- Movie Actor Report -----
+        Movie With Most Actors: ${movie?.title ?: "N/A"}
+        Number Of Actors: ${movieWithMostActors?.value ?: 0}
+        Average Actors Per Movie: ${"%.2f".format(averageActors)}
+        ------------------------------
+    """.trimIndent())
+}
+
 fun save() {
     try {
         movieService.store()
         actorService.store()
         movieActorService.store()
+        logger.info { "Data saved successfully" }
+        println("Data saved successfully.")
     } catch (e: Exception) {
-        System.err.println("Error writing to file: $e")
+        logger.error(e) { "Error saving data" }
+        println("Error writing to file: ${e.message}")
     }
 }
 
@@ -498,7 +601,10 @@ fun load() {
         movieService.load()
         actorService.load()
         movieActorService.load()
+        logger.info { "Data loaded successfully" }
+        println("Data loaded successfully.")
     } catch (e: Exception) {
-        System.err.println("Error reading from file: $e")
+        logger.error(e) { "Error loading data" }
+        println("Error reading from file: ${e.message}")
     }
 }

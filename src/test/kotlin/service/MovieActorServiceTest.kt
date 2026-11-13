@@ -1,6 +1,8 @@
 package service
 
+import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
+import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
@@ -110,6 +112,64 @@ class MovieActorServiceTest {
             assertTrue(movieActorService.addActorToMovie(1, 1))
 
             assertTrue(movieActorService.addActorToMovie(2, 1))
+        }
+    }
+
+    @Nested
+    inner class ReportTests {
+        @Test
+        fun `reports zero associations and zero average when no movies exist`() {
+            assertEquals(0, movieActorService.numberOfMoviesPerActor(7))
+            assertNull(movieActorService.movieWithMostActors())
+            assertEquals(0.0, movieActorService.averageActorsPerMovie(0))
+        }
+
+        @Test
+        fun `reports actor counts per movie and movie with most actors`() {
+            assertTrue(movieActorService.addActorToMovie(10, 1))
+            assertTrue(movieActorService.addActorToMovie(10, 2))
+            assertTrue(movieActorService.addActorToMovie(20, 1))
+
+            assertEquals(2, movieActorService.numberOfMoviesPerActor(1))
+            assertEquals(1, movieActorService.numberOfMoviesPerActor(2))
+            assertEquals(0, movieActorService.numberOfMoviesPerActor(99))
+            assertEquals(10, movieActorService.movieWithMostActors()?.key)
+            assertEquals(2, movieActorService.movieWithMostActors()?.value)
+        }
+
+        @Test
+        fun `selects later movie when it has more actors and retains first on tie`() {
+            assertTrue(movieActorService.addActorToMovie(10, 1))
+            assertTrue(movieActorService.addActorToMovie(20, 1))
+            assertTrue(movieActorService.addActorToMovie(20, 2))
+            assertTrue(movieActorService.addActorToMovie(20, 3))
+            assertTrue(movieActorService.addActorToMovie(30, 1))
+            assertTrue(movieActorService.addActorToMovie(30, 2))
+            assertTrue(movieActorService.addActorToMovie(30, 3))
+
+            val report = movieActorService.movieWithMostActors()
+
+            assertEquals(20, report?.key)
+            assertEquals(3, report?.value)
+        }
+
+        @Test
+        fun `reports the only movie that has an actor association`() {
+            assertTrue(movieActorService.addActorToMovie(42, 7))
+
+            val report = movieActorService.movieWithMostActors()
+
+            assertEquals(42, report?.key)
+            assertEquals(1, report?.value)
+        }
+
+        @Test
+        fun `reports average actor associations per movie`() {
+            assertTrue(movieActorService.addActorToMovie(10, 1))
+            assertTrue(movieActorService.addActorToMovie(10, 2))
+            assertTrue(movieActorService.addActorToMovie(20, 3))
+
+            assertEquals(1.5, movieActorService.averageActorsPerMovie(2))
         }
     }
 }
