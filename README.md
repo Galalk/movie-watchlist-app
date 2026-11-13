@@ -16,8 +16,8 @@ This project was developed as part of my Software Development Tools module at SE
 - Remove actors from movies
 - Assign unique IDs to movies and actors.
 - Update movie watch status
-- Search and filter
-- Update and delete
+- Search and filter entries
+- Update and delete entries
 - View multiple statistics reports for every data model
 - Validate user input to prevent invalid entries
 - Save and load data using JSON persistence
