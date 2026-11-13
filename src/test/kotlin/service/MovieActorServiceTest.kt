@@ -116,6 +116,65 @@ class MovieActorServiceTest {
     }
 
     @Nested
+    inner class AssociationLookupTests {
+        @Test
+        fun `returns actor IDs associated with the requested movie`() {
+            assertTrue(movieActorService.addActorToMovie(10, 1))
+            assertTrue(movieActorService.addActorToMovie(20, 3))
+            assertTrue(movieActorService.addActorToMovie(10, 2))
+
+            assertEquals(listOf(1, 2), movieActorService.getActorIdsForMovie(10))
+        }
+
+        @Test
+        fun `returns empty actor ID list when movie has no associations`() {
+            assertTrue(movieActorService.addActorToMovie(10, 1))
+
+            assertTrue(movieActorService.getActorIdsForMovie(99).isEmpty())
+        }
+
+        @Test
+        fun `returns movie IDs associated with the requested actor`() {
+            assertTrue(movieActorService.addActorToMovie(10, 1))
+            assertTrue(movieActorService.addActorToMovie(20, 2))
+            assertTrue(movieActorService.addActorToMovie(30, 1))
+
+            assertEquals(listOf(10, 30), movieActorService.getMovieIdsForActor(1))
+        }
+
+        @Test
+        fun `returns empty movie ID list when actor has no associations`() {
+            assertTrue(movieActorService.addActorToMovie(10, 1))
+
+            assertTrue(movieActorService.getMovieIdsForActor(99).isEmpty())
+        }
+    }
+
+    @Nested
+    inner class RemoveActorFromMovieTests {
+        @Test
+        fun `removes the requested association and leaves unrelated links`() {
+            assertTrue(movieActorService.addActorToMovie(10, 1))
+            assertTrue(movieActorService.addActorToMovie(10, 2))
+            assertTrue(movieActorService.addActorToMovie(20, 1))
+
+            assertTrue(movieActorService.removeActorFromMovie(10, 1))
+
+            assertTrue(movieActorService.addActorToMovie(10, 1))
+            assertFalse(movieActorService.addActorToMovie(10, 2))
+            assertFalse(movieActorService.addActorToMovie(20, 1))
+        }
+
+        @Test
+        fun `returns false when requested association does not exist`() {
+            assertTrue(movieActorService.addActorToMovie(10, 1))
+
+            assertFalse(movieActorService.removeActorFromMovie(10, 2))
+            assertFalse(movieActorService.removeActorFromMovie(99, 1))
+        }
+    }
+
+    @Nested
     inner class ReportTests {
         @Test
         fun `reports zero associations and zero average when no movies exist`() {

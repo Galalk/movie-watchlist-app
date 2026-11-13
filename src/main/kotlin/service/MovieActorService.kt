@@ -50,6 +50,24 @@ class MovieActorService(
         return movieActors.size.toDouble() / totalMovies
     }
 
+    fun getActorIdsForMovie(movieId: Int): List<Int> {
+        return movieActors
+            .filter { it.movieId == movieId }
+            .map { it.actorId }
+    }
+
+    fun getMovieIdsForActor(actorId: Int): List<Int> {
+        return movieActors
+            .filter { it.actorId == actorId }
+            .map { it.movieId }
+    }
+
+    fun removeActorFromMovie(movieId: Int, actorId: Int): Boolean {
+        return movieActors.removeAll {
+            it.movieId == movieId && it.actorId == actorId
+        }
+    }
+
     fun load() {
         val array = serializer.read(Array<MovieActor>::class.java)
         movieActors = array.toCollection(ArrayList())

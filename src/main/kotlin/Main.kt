@@ -26,7 +26,7 @@ fun main() {
 
 fun mainMenu(): Int {
     print(
-        """ 
+        """  
          > ------------------------------------------
          >           Movies Backlog Tracker ☺          
          > ------------------------------------------
@@ -34,11 +34,12 @@ fun mainMenu(): Int {
          > |     2) Add a Movie                     |
          > |     3) Add an Actor                    |
          > |     4) Add an Actor to a Movie         |
-         > |     5) List All Menu                   |
-         > |     6) Change Movie Watch Status       |
-         > |     7) Update Movie or Actor           |
-         > |     8) Delete Movie or Actor           |
-         > |     9) View Reports                    |
+         > |     5) Remove an Actor from a Movie    |
+         > |     6) View All Menu                   |
+         > |     7) Change Movie Watch Status       |
+         > |     8) Update Movie or Actor           |
+         > |     9) Delete Movie or Actor           |
+         > |    10) View Reports                    |
          > ------------------------------------------
          > |    20) Save                            |
          > |    21) Load                            |
@@ -59,11 +60,12 @@ fun runMenu() {
             2 -> addMovie()
             3 -> addActor()
             4 -> addActorToMovie()
-            5 -> listAll()
-            6 -> changeMovieStatus()
-            7 -> updateMenu()
-            8 -> deleteMenu()
-            9 -> reportMenu()
+            5 -> removeActorFromMovie()
+            6 -> listAll()
+            7 -> changeMovieStatus()
+            8 -> updateMenu()
+            9 -> deleteMenu()
+            10 -> reportMenu()
             20 -> save()
             21 -> load()
             0 -> {
@@ -206,8 +208,32 @@ fun addActorToMovie() {
     }
 }
 
+fun removeActorFromMovie() {
+    val movieId = readNextInt("Enter Movie ID: ")
+    val movie = movieService.findMovieById(movieId)
+
+    if (movie == null) {
+        println("Movie not found.")
+        return
+    }
+
+    val actorId = readNextInt("Enter Actor ID: ")
+    val actor = actorService.findActorById(actorId)
+
+    if (actor == null) {
+        println("Actor not found.")
+        return
+    }
+
+    if (movieActorService.removeActorFromMovie(movieId, actorId)) {
+        println("Removed ${actor.name} from ${movie.title}.")
+    } else {
+        println("${actor.name} is not associated with ${movie.title}.")
+    }
+}
+
 fun listAll() {
-    logger.info { "List menu opened" }
+    logger.info { "View menu opened" }
 
     var option: Int
 
@@ -215,10 +241,12 @@ fun listAll() {
         option =
             readNextInt(
                 """
-            > ---------- List Menu ------------
+            > ---------- View Menu ------------
             > |   1) View All Movies          |
             > |   2) View All Actors          |
             > |   3) View Watched Movies      |
+            > |   4) View Actors in a Movie   |
+            > |   5) View Movies for an Actor |
             > --------------------------------
             > |   0) Back to Main Menu        |
             > ---------------------------------
@@ -234,14 +262,60 @@ fun listAll() {
                     .getMovies()
                     .filter { it.finished }
                     .forEach { println(it) }
+            4 -> viewActorsInMovie()
+            5 -> viewMoviesForActor()
             0 -> {
-                logger.info { "Exiting list menu" }
+                logger.info { "Exiting view menu" }
                 println("Returning to Main Menu")
 
             }
             else -> println("Invalid option entered: $option")
         }
     } while (option != 0)
+}
+
+fun viewActorsInMovie() {
+    val movieId = readNextInt("Enter Movie ID: ")
+    val movie = movieService.findMovieById(movieId)
+
+    if (movie == null) {
+        println("Movie not found.")
+        return
+    }
+
+    val actorIds = movieActorService.getActorIdsForMovie(movieId)
+
+    if (actorIds.isEmpty()) {
+        println("No actors associated with ${movie.title}.")
+        return
+    }
+
+    println("Actors in ${movie.title}:")
+    for (actorId in actorIds) {
+        println(actorService.findActorById(actorId))
+    }
+}
+
+fun viewMoviesForActor() {
+    val actorId = readNextInt("Enter Actor ID: ")
+    val actor = actorService.findActorById(actorId)
+
+    if (actor == null) {
+        println("Actor not found.")
+        return
+    }
+
+    val movieIds = movieActorService.getMovieIdsForActor(actorId)
+
+    if (movieIds.isEmpty()) {
+        println("No movies associated with ${actor.name}.")
+        return
+    }
+
+    println("Movies featuring ${actor.name}:")
+    for (movieId in movieIds) {
+        println(movieService.findMovieById(movieId))
+    }
 }
 
 fun changeMovieStatus() {
