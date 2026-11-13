@@ -31,18 +31,15 @@ fun mainMenu(): Int {
          >           Movies Backlog Tracker ☺          
          > ------------------------------------------
          > |     1) Search and Filter               |
-         > |     2) Add a Movie                     |
-         > |     3) Add an Actor                    |
-         > |     4) Add an Actor to a Movie         |
-         > |     5) Remove an Actor from a Movie    |
-         > |     6) View All Menu                   |
-         > |     7) Change Movie Watch Status       |
-         > |     8) Update Movie or Actor           |
-         > |     9) Delete Movie or Actor           |
-         > |    10) View Reports                    |
+         > |     2) Add New                         |
+         > |     3) View All                        |
+         > |     4) Change Movie Watch Status       |
+         > |     5) Update Movie or Actor           |
+         > |     6) Delete or Remove                |
+         > |     7) View Reports                    |
          > ------------------------------------------
-         > |    20) Save                            |
-         > |    21) Load                            |
+         > |     8) Save                            |
+         > |     9) Load                            |
          > ------------------------------------------   
          > |     0) Exit                            |
          > ------------------------------------------
@@ -61,46 +58,34 @@ fun runMenu() {
             }
 
             2 -> {
-                addMovie()
+                addMenu()
             }
 
             3 -> {
-                addActor()
-            }
-
-            4 -> {
-                addActorToMovie()
-            }
-
-            5 -> {
-                removeActorFromMovie()
-            }
-
-            6 -> {
                 listAll()
             }
 
-            7 -> {
+            4 -> {
                 changeMovieStatus()
             }
 
-            8 -> {
+            5 -> {
                 updateMenu()
             }
 
-            9 -> {
+            6 -> {
                 deleteMenu()
             }
 
-            10 -> {
+            7 -> {
                 reportMenu()
             }
 
-            20 -> {
+            8 -> {
                 save()
             }
 
-            21 -> {
+            9 -> {
                 load()
             }
 
@@ -124,7 +109,7 @@ fun searchMenu() {
     do {
         println(
             """
-            > ---------- Search Menu ------------
+            > -------- Search and Filter --------
             > |   1) Search for Movie           |
             > |   2) Search for Actor           | 
             > |   3) Filter Movies by Genre     |
@@ -212,6 +197,51 @@ fun filterActorsByName() {
     }
 }
 
+fun addMenu() {
+    logger.info { "Add menu opened" }
+
+    var option: Int
+
+    do {
+        println(
+            """
+            > ------------ Add New --------------
+            > |   1) Add a Movie                |
+            > |   2) Add an Actor               | 
+            > |   3) Add an Actor to a Movie    |
+            > -----------------------------------
+            > |   0) Back to Main Menu          |
+            > -----------------------------------
+            """.trimIndent(),
+        )
+
+        option = readNextInt("Enter option: ")
+
+        when (option) {
+            1 -> {
+                addMovie()
+            }
+
+            2 -> {
+                addActor()
+            }
+
+            3 -> {
+                addActorToMovie()
+            }
+
+            0 -> {
+                logger.info { "Exiting add menu" }
+                println("Returning to Main Menu")
+            }
+
+            else -> {
+                println("Invalid option")
+            }
+        }
+    } while (option != 0)
+}
+
 fun addMovie() {
     val title = readNextLine("Title: ")
     val genre = readNextLine("Genre: ")
@@ -294,7 +324,7 @@ fun listAll() {
         option =
             readNextInt(
                 """
-            > ---------- View Menu ------------
+            > ---------- View All -------------
             > |   1) View All Movies          |
             > |   2) View All Actors          |
             > |   3) View Watched Movies      |
@@ -476,7 +506,7 @@ fun updateMenu() {
         println(
             """
 
-            > ---------- Update Menu ----------
+            > ------------ Update -------------
             > |   1) Update Movie             |
             > |   2) Update Actor             |
             > --------------------------------
@@ -577,12 +607,13 @@ fun deleteMenu() {
         println(
             """
 
-            > ---------- Delete Menu ----------
-            > |   1) Delete Movie             |
-            > |   2) Delete Actor             |
-            > --------------------------------
-            > |   0) Back to Main Menu        |
-            > ---------------------------------
+            > -------------  Delete ---------------
+            > |   1) Delete a Movie               |
+            > |   2) Delete an Actor              | 
+            > |   3) Remove an Actor from a Movie |
+            > -----------------------------------
+            > |   0) Back to Main Menu            |
+            > -------------------------------------
             """.trimIndent(),
         )
 
@@ -595,6 +626,10 @@ fun deleteMenu() {
 
             2 -> {
                 deleteActor()
+            }
+
+            3 -> {
+                removeActorFromMovie()
             }
 
             0 -> {
@@ -684,7 +719,7 @@ fun reportMenu() {
         println(
             """
 
-            > ---------- Report Menu ----------
+            > ------------ Reports ------------
             > |   1) Movie Report             |
             > |   2) Actor Report             |
             > |   3) Movie and Actor Report   |
