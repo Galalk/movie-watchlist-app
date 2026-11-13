@@ -1,18 +1,21 @@
 
 package service
 
-import Persistance.JSONSerializer
-import Persistance.Serializer
 import model.Movie
-import org.junit.jupiter.api.Assertions.*
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertFalse
+import org.junit.jupiter.api.Assertions.assertNull
+import org.junit.jupiter.api.Assertions.assertSame
+import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
+import persistance.JSONSerializer
+import persistance.Serializer
 import java.io.File
 
 class MovieServiceTest {
-
     @TempDir
     lateinit var tempDir: File
 
@@ -24,13 +27,15 @@ class MovieServiceTest {
 
     @BeforeEach
     fun setUp() {
-        emptyMovieService = MovieService(
-            JSONSerializer(File(tempDir, "empty-movies.json"))
-        )
+        emptyMovieService =
+            MovieService(
+                JSONSerializer(File(tempDir, "empty-movies.json")),
+            )
 
-        populatedMovieService = MovieService(
-            JSONSerializer(File(tempDir, "movies.json"))
-        )
+        populatedMovieService =
+            MovieService(
+                JSONSerializer(File(tempDir, "movies.json")),
+            )
 
         movie1 = Movie(0, "Gladiator")
         movie2 = Movie(0, "Inception")
@@ -41,7 +46,6 @@ class MovieServiceTest {
 
     @Nested
     inner class AddMovieTests {
-
         @Test
         fun `adding movie increases collection size`() {
             assertEquals(0, emptyMovieService.getMovies().size)
@@ -81,40 +85,10 @@ class MovieServiceTest {
 
             assertFalse(finishedMovie.finished)
         }
-
-        @Test
-        fun `adding movie with same title and release year is rejected ignoring case`() {
-            val original = Movie(title = "The Thing", releaseYear = 1982)
-            val duplicate = Movie(title = "  tHe ThInG  ", releaseYear = 1982)
-            val service = MovieService(JSONSerializer(File(tempDir, "duplicates.json")))
-            assertTrue(service.addMovie(original))
-
-            assertFalse(service.addMovie(duplicate))
-
-            assertEquals(1, service.getMovies().size)
-            val nextMovie = Movie(title = "Another movie", releaseYear = 2020)
-            assertTrue(service.addMovie(nextMovie))
-            assertEquals(1, nextMovie.id)
-        }
-
-        @Test
-        fun `same title with different release year is accepted as a remake`() {
-            val original = Movie(title = "A Star Is Born", releaseYear = 1954)
-            val remake = Movie(title = "A Star Is Born", releaseYear = 2018)
-            val service = MovieService(JSONSerializer(File(tempDir, "remakes.json")))
-
-            assertTrue(service.addMovie(original))
-            assertTrue(service.addMovie(remake))
-
-            assertEquals(2, service.getMovies().size)
-            assertEquals(0, original.id)
-            assertEquals(1, remake.id)
-        }
     }
 
     @Nested
     inner class SearchMovieTests {
-
         @Test
         fun `finds movie by its ID`() {
             assertSame(movie2, populatedMovieService.findMovieById(1))
@@ -156,7 +130,6 @@ class MovieServiceTest {
 
     @Nested
     inner class FilterMoviesTests {
-
         @Test
         fun `filters movies by exact genre ignoring case`() {
             val movie = Movie(title = "Arrival", genre = "Science Fiction")
@@ -176,7 +149,6 @@ class MovieServiceTest {
 
     @Nested
     inner class UpdateMovieTests {
-
         @Test
         fun `updates movie details while preserving ID and watched status`() {
             val movie = Movie(title = "Old title", genre = "Old genre", releaseYear = 2000, duration = 1.0)
@@ -195,21 +167,6 @@ class MovieServiceTest {
         }
 
         @Test
-        fun `rejects update that would duplicate another title and year`() {
-            val service = MovieService(JSONSerializer(File(tempDir, "duplicate-update.json")))
-            val original = Movie(title = "Arrival", genre = "Drama", releaseYear = 2016)
-            val other = Movie(title = "Dune", genre = "Sci-Fi", releaseYear = 2021)
-            assertTrue(service.addMovie(original))
-            assertTrue(service.addMovie(other))
-
-            assertFalse(service.updateMovie(original.id, " DUNE ", "Drama", 2021, 2.0))
-
-            assertEquals("Arrival", original.title)
-            assertEquals("Drama", original.genre)
-            assertEquals(2016, original.releaseYear)
-        }
-
-        @Test
         fun `updating unknown movie returns false`() {
             val service = MovieService(JSONSerializer(File(tempDir, "missing-update.json")))
 
@@ -219,7 +176,6 @@ class MovieServiceTest {
 
     @Nested
     inner class DeleteMovieTests {
-
         @Test
         fun `deletes existing movie`() {
             val service = MovieService(JSONSerializer(File(tempDir, "delete-movie.json")))
@@ -242,7 +198,6 @@ class MovieServiceTest {
 
     @Nested
     inner class MovieStatusTests {
-
         @Test
         fun `marking an existing movie watched updates it and stores the list`() {
             val serializer = CapturingSerializer()
@@ -265,6 +220,19 @@ class MovieServiceTest {
             assertFalse(service.markMovieAsWatched(99))
 
             assertEquals(0, serializer.writeCalls)
+        }
+
+        @Test
+        fun `marking movie after the first list entry watched finds it by ID`() {
+            assertTrue(populatedMovieService.markMovieAsWatched(movie2.id))
+
+            assertFalse(movie1.finished)
+            assertTrue(movie2.finished)
+        }
+
+        @Test
+        fun `marking unknown ID watched returns false when list is populated`() {
+            assertFalse(populatedMovieService.markMovieAsWatched(99))
         }
 
         @Test
@@ -291,18 +259,105 @@ class MovieServiceTest {
 
             assertEquals(0, serializer.writeCalls)
         }
+
+        @Test
+        fun `reverting movie after the first list entry finds it by ID`() {
+            movie2.finished = true
+
+            assertTrue(populatedMovieService.markMovieAsToWatch(movie2.id))
+
+            assertFalse(movie1.finished)
+            assertFalse(movie2.finished)
+        }
+
+        @Test
+        fun `reverting unknown ID returns false when list is populated`() {
+            assertFalse(populatedMovieService.markMovieAsToWatch(99))
+        }
+    }
+
+    @Nested
+    inner class ValidationTest {
+        @Test
+        fun `adding movie with same title and release year is rejected ignoring case`() {
+            val original = Movie(title = "The Thing", releaseYear = 1982)
+            val duplicate = Movie(title = "  tHe ThInG  ", releaseYear = 1982)
+            val service = MovieService(JSONSerializer(File(tempDir, "duplicates.json")))
+            assertTrue(service.addMovie(original))
+
+            assertFalse(service.addMovie(duplicate))
+
+            assertEquals(1, service.getMovies().size)
+            val nextMovie = Movie(title = "Another movie", releaseYear = 2020)
+            assertTrue(service.addMovie(nextMovie))
+            assertEquals(1, nextMovie.id)
+        }
+
+        @Test
+        fun `same title with different release year is accepted as a remake`() {
+            val original = Movie(title = "A Star Is Born", releaseYear = 1954)
+            val remake = Movie(title = "A Star Is Born", releaseYear = 2018)
+            val service = MovieService(JSONSerializer(File(tempDir, "remakes.json")))
+
+            assertTrue(service.addMovie(original))
+            assertTrue(service.addMovie(remake))
+
+            assertEquals(2, service.getMovies().size)
+            assertEquals(0, original.id)
+            assertEquals(1, remake.id)
+        }
+
+        @Test
+        fun `rejects update that would duplicate another title and year`() {
+            val service = MovieService(JSONSerializer(File(tempDir, "duplicate-update.json")))
+            val original = Movie(title = "Arrival", genre = "Drama", releaseYear = 2016)
+            val other = Movie(title = "Dune", genre = "Sci-Fi", releaseYear = 2021)
+            assertTrue(service.addMovie(original))
+            assertTrue(service.addMovie(other))
+
+            assertFalse(service.updateMovie(original.id, " DUNE ", "Drama", 2021, 2.0))
+
+            assertEquals("Arrival", original.title)
+            assertEquals("Drama", original.genre)
+            assertEquals(2016, original.releaseYear)
+        }
+
+        @Test
+        fun `allows update when another movie has same title with a different year`() {
+            val service = MovieService(JSONSerializer(File(tempDir, "different-remake-year.json")))
+            val original = Movie(title = "Dune", releaseYear = 1984)
+            assertTrue(service.addMovie(original))
+            assertTrue(service.addMovie(Movie(title = "Dune", releaseYear = 2021)))
+
+            assertTrue(service.updateMovie(original.id, "Dune", "Adventure", 2000, 2.0))
+
+            assertEquals(2000, original.releaseYear)
+            assertEquals("Adventure", original.genre)
+        }
+
+        @Test
+        fun `allows update when another movie has a different title`() {
+            val service = MovieService(JSONSerializer(File(tempDir, "different-title-update.json")))
+            val original = Movie(title = "Arrival", releaseYear = 2016)
+            assertTrue(service.addMovie(original))
+            assertTrue(service.addMovie(Movie(title = "Dune", releaseYear = 2021)))
+
+            assertTrue(service.updateMovie(original.id, "Interstellar", "Sci-Fi", 2014, 2.0))
+
+            assertEquals("Interstellar", original.title)
+        }
     }
 
     @Nested
     inner class PersistenceTests {
-
         @Test
         fun `saving and loading empty movies does not crash`() {
             emptyMovieService.store()
 
-            val loadedService = MovieService(
-                JSONSerializer(File(tempDir, "empty-movies.json"))
-            )
+            val loadedService =
+                MovieService(
+                    JSONSerializer(File(tempDir, "empty-movies.json")),
+                )
 
             loadedService.load()
 
@@ -313,9 +368,10 @@ class MovieServiceTest {
         fun `saving and loading movies preserves data`() {
             populatedMovieService.store()
 
-            val loadedService = MovieService(
-                JSONSerializer(File(tempDir, "movies.json"))
-            )
+            val loadedService =
+                MovieService(
+                    JSONSerializer(File(tempDir, "movies.json")),
+                )
 
             loadedService.load()
 
@@ -328,9 +384,10 @@ class MovieServiceTest {
         fun `loading movies restores next available ID`() {
             populatedMovieService.store()
 
-            val loadedService = MovieService(
-                JSONSerializer(File(tempDir, "movies.json"))
-            )
+            val loadedService =
+                MovieService(
+                    JSONSerializer(File(tempDir, "movies.json")),
+                )
 
             loadedService.load()
 
@@ -351,6 +408,33 @@ class MovieServiceTest {
 
             assertEquals(0, newMovie.id)
             assertEquals(1, service.getMovies().size)
+        }
+
+        @Test
+        fun `loading one movie restores ID after that movie`() {
+            val service = MovieService(FixedReadSerializer(arrayOf(Movie(id = 42, title = "Loaded"))))
+
+            service.load()
+            val nextMovie = Movie(title = "Next")
+            assertTrue(service.addMovie(nextMovie))
+
+            assertEquals(43, nextMovie.id)
+        }
+
+        @Test
+        fun `loading movies in descending ID order restores ID after the maximum`() {
+            val loadedMovies =
+                arrayOf(
+                    Movie(id = 42, title = "Higher ID"),
+                    Movie(id = 7, title = "Lower ID"),
+                )
+            val service = MovieService(FixedReadSerializer(loadedMovies))
+
+            service.load()
+            val nextMovie = Movie(title = "Next")
+            assertTrue(service.addMovie(nextMovie))
+
+            assertEquals(43, nextMovie.id)
         }
 
         @Test
@@ -378,7 +462,9 @@ class MovieServiceTest {
         override fun <T> read(classType: Class<T>): T = error("read should not be called")
     }
 
-    private class FixedReadSerializer(private val movies: Array<Movie>) : Serializer {
+    private class FixedReadSerializer(
+        private val movies: Array<Movie>,
+    ) : Serializer {
         override fun write(obj: Any?) = Unit
 
         @Suppress("UNCHECKED_CAST")

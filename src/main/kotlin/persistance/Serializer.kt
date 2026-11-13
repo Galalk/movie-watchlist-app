@@ -1,4 +1,4 @@
-package Persistance
+package persistance
 
 interface Serializer {
     fun write(obj: Any?)

@@ -1,41 +1,42 @@
 package service
 
-import Persistance.Serializer
 import model.MovieActor
+import persistance.Serializer
 
-class MovieActorService(serializerType: Serializer) {
-
+class MovieActorService(
+    serializerType: Serializer,
+) {
     private var serializer: Serializer = serializerType
 
     private var movieActors = ArrayList<MovieActor>()
 
-    fun addActorToMovie(movieId: Int, actorId: Int): Boolean {
-
+    fun addActorToMovie(
+        movieId: Int,
+        actorId: Int,
+    ): Boolean {
         if (movieActors.any {
                 it.movieId == movieId && it.actorId == actorId
-            }) {
+            }
+        ) {
             return false
         }
 
         movieActors.add(
-            MovieActor(movieId, actorId)
+            MovieActor(movieId, actorId),
         )
 
         return true
     }
 
-    fun deleteAssociationsForMovie(movieId: Int): Boolean {
-        return movieActors.removeAll {
+    fun deleteAssociationsForMovie(movieId: Int): Boolean =
+        movieActors.removeAll {
             it.movieId == movieId
         }
-    }
 
-    fun deleteAssociationsForActor(actorId: Int): Boolean {
-        return movieActors.removeAll {
+    fun deleteAssociationsForActor(actorId: Int): Boolean =
+        movieActors.removeAll {
             it.actorId == actorId
         }
-    }
-
 
     fun load() {
         val array = serializer.read(Array<MovieActor>::class.java)
@@ -46,4 +47,3 @@ class MovieActorService(serializerType: Serializer) {
         serializer.write(movieActors)
     }
 }
-

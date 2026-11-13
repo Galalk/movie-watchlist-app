@@ -1,8 +1,8 @@
 package utils
 
 import java.time.LocalDate
-import java.time.format.DateTimeParseException
 import java.time.format.DateTimeFormatter
+import java.time.format.DateTimeParseException
 import java.time.format.ResolverStyle
 
 fun readNextLine(prompt: String = ""): String {
@@ -57,8 +57,10 @@ fun readNextBoolean(prompt: String = ""): Boolean {
 }
 
 fun readNextDOB(prompt: String): String {
-    val formatter = DateTimeFormatter.ofPattern("dd-MM-uuuu")
-        .withResolverStyle(ResolverStyle.STRICT)
+    val formatter =
+        DateTimeFormatter
+            .ofPattern("dd-MM-uuuu")
+            .withResolverStyle(ResolverStyle.STRICT)
 
     while (true) {
         val dob = readNextLine(prompt)
@@ -71,5 +73,3 @@ fun readNextDOB(prompt: String): String {
         }
     }
 }
-
-

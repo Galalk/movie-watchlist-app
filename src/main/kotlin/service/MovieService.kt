@@ -1,24 +1,40 @@
 package service
 
-import Persistance.Serializer
 import model.Movie
+import persistance.Serializer
 
-class MovieService(serializerType: Serializer) {
+/**
+ * This class manages a list of movies and provides functionality for adding, updating, deleting,
+ * and filtering movies. It uses a [Serializer] to load and store the movies persistently.
+ *
+ * @property serializer A serializer instance for reading and writing the movies.
+ * @constructor Initializes the MovieService with the specified [serializerType].
+ */
 
+class MovieService(
+    serializerType: Serializer,
+) {
     private var serializer: Serializer = serializerType
     private var movies = ArrayList<Movie>()
 
     private var lastId = 0
+
     private fun getId(): Int = lastId++
 
     fun getMovies(): List<Movie> = movies
 
+    /**
+     * Adds a new [Movie] to the list.
+     *
+     * @param movie The [Movie] to be added.
+     * @return `true` if the note was successfully added, `false` otherwise.
+     */
     fun addMovie(movie: Movie): Boolean {
-
         if (movies.any {
                 it.title.equals(movie.title.trim(), ignoreCase = true) &&
-                        it.releaseYear == movie.releaseYear
-            }) {
+                    it.releaseYear == movie.releaseYear
+            }
+        ) {
             return false
         }
 
@@ -29,25 +45,23 @@ class MovieService(serializerType: Serializer) {
         return true
     }
 
-    fun findMovieById(movieId: Int): Movie? {
-        return movies.find { it.id == movieId }
-    }
+    fun findMovieById(movieId: Int): Movie? = movies.find { it.id == movieId }
 
-    fun searchMovie(title: String, releaseYear: Int?): Movie? {
-        return movies.firstOrNull {
+    fun searchMovie(
+        title: String,
+        releaseYear: Int?,
+    ): Movie? =
+        movies.firstOrNull {
             it.title.equals(title, ignoreCase = true) &&
-                    it.releaseYear == releaseYear
+                it.releaseYear == releaseYear
         }
-    }
 
-    fun filterMoviesByGenre(genre: String): List<Movie> {
-        return movies.filter {
+    fun filterMoviesByGenre(genre: String): List<Movie> =
+        movies.filter {
             it.genre.equals(genre, ignoreCase = true)
         }
-    }
 
     fun markMovieAsWatched(movieId: Int): Boolean {
-
         val movie = movies.find { it.id == movieId } ?: return false
 
         movie.finished = true
@@ -64,14 +78,21 @@ class MovieService(serializerType: Serializer) {
         return true
     }
 
-    fun updateMovie(movieId: Int, title: String, genre: String, releaseYear: Int?, duration: Double): Boolean {
+    fun updateMovie(
+        movieId: Int,
+        title: String,
+        genre: String,
+        releaseYear: Int?,
+        duration: Double,
+    ): Boolean {
         val movie = findMovieById(movieId) ?: return false
 
         if (movies.any {
                 it.id != movieId &&
-                        it.title.equals(title.trim(), ignoreCase = true) &&
-                        it.releaseYear == releaseYear
-            }) {
+                    it.title.equals(title.trim(), ignoreCase = true) &&
+                    it.releaseYear == releaseYear
+            }
+        ) {
             return false
         }
 

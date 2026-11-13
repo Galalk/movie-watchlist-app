@@ -7,11 +7,9 @@ data class Movie(
     var releaseYear: Int? = null,
     var duration: Double = 0.0,
     var finished: Boolean = false,
-)
-
-{
-    override fun toString(): String {
-        return """
+) {
+    override fun toString(): String =
+        """
         ------------------------------
         | Movie ID: $id
         | Title: $title
@@ -20,6 +18,5 @@ data class Movie(
         | Duration: $duration Hours
         | Status: ${if (finished) "Watched" else "To Watch"}
         ------------------------------
-    """.trimIndent()
-    }
+        """.trimIndent()
 }

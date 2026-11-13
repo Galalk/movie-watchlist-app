@@ -1,24 +1,26 @@
 package service
 
-import Persistance.Serializer
 import model.Actor
+import persistance.Serializer
 
-class ActorService(serializerType: Serializer){
-
+class ActorService(
+    serializerType: Serializer,
+) {
     private var serializer: Serializer = serializerType
     private var actors = ArrayList<Actor>()
 
     private var lastId = 0
+
     private fun getId(): Int = lastId++
 
     fun getActors(): List<Actor> = actors
 
     fun addActor(actor: Actor): Boolean {
-
         if (actors.any {
                 it.name.equals(actor.name.trim(), ignoreCase = true) &&
-                        it.dateOfBirth == actor.dateOfBirth
-            }) {
+                    it.dateOfBirth == actor.dateOfBirth
+            }
+        ) {
             return false
         }
 
@@ -28,14 +30,19 @@ class ActorService(serializerType: Serializer){
         return true
     }
 
-    fun updateActor(actorId: Int, name: String, dateOfBirth: String): Boolean {
+    fun updateActor(
+        actorId: Int,
+        name: String,
+        dateOfBirth: String,
+    ): Boolean {
         val actor = findActorById(actorId) ?: return false
 
         if (actors.any {
                 it.id != actorId &&
-                        it.name.equals(name.trim(), ignoreCase = true) &&
-                        it.dateOfBirth == dateOfBirth
-            }) {
+                    it.name.equals(name.trim(), ignoreCase = true) &&
+                    it.dateOfBirth == dateOfBirth
+            }
+        ) {
             return false
         }
 
@@ -51,22 +58,21 @@ class ActorService(serializerType: Serializer){
         return true
     }
 
-    fun findActorById(actorId: Int): Actor? {
-        return actors.find { it.id == actorId }
-    }
+    fun findActorById(actorId: Int): Actor? = actors.find { it.id == actorId }
 
-    fun searchActor(name: String, dateOfBirth: String): Actor? {
-        return actors.firstOrNull {
+    fun searchActor(
+        name: String,
+        dateOfBirth: String,
+    ): Actor? =
+        actors.firstOrNull {
             it.name.equals(name, ignoreCase = true) &&
-                    it.dateOfBirth == dateOfBirth
+                it.dateOfBirth == dateOfBirth
         }
-    }
 
-    fun filterActorsByName(name: String): List<Actor> {
-        return actors.filter {
+    fun filterActorsByName(name: String): List<Actor> =
+        actors.filter {
             it.name.contains(name, ignoreCase = true)
         }
-    }
 
     fun load() {
         val array = serializer.read(Array<Actor>::class.java)

@@ -1,15 +1,15 @@
-import Persistance.JSONSerializer
+import io.github.oshai.kotlinlogging.KotlinLogging
+import model.Actor
+import model.Movie
+import persistance.JSONSerializer
+import service.ActorService
+import service.MovieActorService
+import service.MovieService
 import utils.readNextDOB
 import utils.readNextDouble
 import utils.readNextInt
 import utils.readNextLine
 import utils.readNextYear
-import io.github.oshai.kotlinlogging.KotlinLogging
-import model.Actor
-import model.Movie
-import service.ActorService
-import service.MovieActorService
-import service.MovieService
 import java.io.File
 
 val movieService = MovieService(JSONSerializer(File("movies.json")))
@@ -18,14 +18,15 @@ val movieActorService = MovieActorService(JSONSerializer(File("movieActors.json"
 
 private val logger = KotlinLogging.logger {}
 
-fun main(){
+fun main() {
     logger.info { "Movie Backlog Tracker Started" }
 
     runMenu()
 }
 
 fun mainMenu(): Int {
-    print(""" 
+    print(
+        """ 
          > ------------------------------------------
          >           Movies Backlog Tracker ☺          
          > ------------------------------------------
@@ -43,15 +44,16 @@ fun mainMenu(): Int {
          > ------------------------------------------   
          > |     0) Exit                            |
          > ------------------------------------------
-         > """.trimMargin(">"))
+         > """.trimMargin(">"),
+    )
     return readNextInt("==>> ")
 }
 
-fun runMenu (){
-    var input : Int
+fun runMenu() {
+    var input: Int
     do {
         input = mainMenu()
-        when(input) {
+        when (input) {
             1 -> searchMenu()
             2 -> addMovie()
             3 -> addActor()
@@ -62,7 +64,7 @@ fun runMenu (){
             8 -> deleteMenu()
             20 -> save()
             21 -> load()
-            0 ->  {
+            0 -> {
                 println("Exiting App")
                 logger.info { "Movie Backlog Tracker Exiting" }
             }
@@ -72,11 +74,11 @@ fun runMenu (){
 }
 
 fun searchMenu() {
-
     var option: Int
 
     do {
-        println("""
+        println(
+            """
             > ---------- Search Menu ------------
             > |   1) Search for Movie           |
             > |   2) Search for Actor           | 
@@ -85,7 +87,8 @@ fun searchMenu() {
             > -----------------------------------
             > |   0) Back to Main Menu          |
             > -----------------------------------
-        """.trimIndent())
+            """.trimIndent(),
+        )
 
         option = readNextInt("Enter option: ")
 
@@ -97,12 +100,10 @@ fun searchMenu() {
             0 -> println("Returning to main menu...")
             else -> println("Invalid option")
         }
-
     } while (option != 0)
 }
 
 fun searchMovie() {
-
     val title = readNextLine("Enter movie title: ")
     val releaseYear = readNextYear("Enter release year: ")
 
@@ -114,7 +115,6 @@ fun searchMovie() {
 }
 
 fun searchActor() {
-
     val name = readNextLine("Enter actor name: ")
     val dateOfBirth = readNextDOB("Enter date of birth: ")
 
@@ -126,7 +126,6 @@ fun searchActor() {
 }
 
 fun filterMoviesByGenre() {
-
     val genre = readNextLine("Enter genre: ")
 
     val filteredMovies = movieService.filterMoviesByGenre(genre)
@@ -139,7 +138,6 @@ fun filterMoviesByGenre() {
 }
 
 fun filterActorsByName() {
-
     val name = readNextLine("Enter actor name: ")
 
     val filteredActors = actorService.filterActorsByName(name)
@@ -166,7 +164,7 @@ fun addMovie() {
     }
 }
 
-fun addActor(){
+fun addActor() {
     val name = readNextLine("Full name: ")
     val dateOfBirth = readNextDOB("Date of Birth (DD-MM-YYYY): ")
 
@@ -201,12 +199,12 @@ fun addActorToMovie() {
 }
 
 fun listAll() {
-
     var option: Int
 
     do {
-        option = readNextInt(
-            """
+        option =
+            readNextInt(
+                """
             > ---------- List Menu ------------
             > |   1) View All Movies          |
             > |   2) View All Actors          |
@@ -215,19 +213,20 @@ fun listAll() {
             > |   0) Back to Main Menu        |
             > ---------------------------------
             > ==>>
-            """.trimMargin(">")
-        )
+            """.trimMargin(">"),
+            )
 
         when (option) {
             1 -> movieService.getMovies().forEach { println(it) }
             2 -> actorService.getActors().forEach { println(it) }
-            3 -> movieService.getMovies()
-                .filter { it.finished }
-                .forEach { println(it) }
+            3 ->
+                movieService
+                    .getMovies()
+                    .filter { it.finished }
+                    .forEach { println(it) }
             0 -> println("Returning to main menu")
             else -> println("Invalid option entered: $option")
         }
-
     } while (option != 0)
 }
 
@@ -235,14 +234,16 @@ fun changeMovieStatus() {
     var option: Int
 
     do {
-        println("""
+        println(
+            """
             > --------- Movie Status ----------
             > |   1) Change Movie to Watched  |       
             > |   2) Revert Movie to To Watch |         
             > --------------------------------
             > |   0) Back to Main Menu        |
             > ---------------------------------
-        """.trimIndent())
+            """.trimIndent(),
+        )
 
         option = readNextInt("Enter option: ")
 
@@ -256,9 +257,7 @@ fun changeMovieStatus() {
 }
 
 fun addMovieToWatched() {
-
     val id = readNextInt("Enter Movie ID: ")
-
 
     val movie = movieService.findMovieById(id)
 
@@ -301,7 +300,8 @@ fun updateMenu() {
     var option: Int
 
     do {
-        println("""
+        println(
+            """
 
             > ---------- Update Menu ----------
             > |   1) Update Movie             |
@@ -309,7 +309,8 @@ fun updateMenu() {
             > --------------------------------
             > |   0) Back to Main Menu        |
             > ---------------------------------
-        """.trimIndent())
+            """.trimIndent(),
+        )
 
         option = readNextInt("Enter option: ")
 
@@ -319,7 +320,6 @@ fun updateMenu() {
             0 -> println("Returning to main menu...")
             else -> println("Invalid option.")
         }
-
     } while (option != 0)
 }
 
@@ -352,7 +352,7 @@ fun updateMovie(service: MovieService = movieService) {
             title,
             genre,
             releaseYear,
-            duration
+            duration,
         )
     ) {
         println("Movie updated successfully.")
@@ -394,7 +394,8 @@ fun deleteMenu() {
     var option: Int
 
     do {
-        println("""
+        println(
+            """
 
             > ---------- Delete Menu ----------
             > |   1) Delete Movie             |
@@ -402,7 +403,8 @@ fun deleteMenu() {
             > --------------------------------
             > |   0) Back to Main Menu        |
             > ---------------------------------
-        """.trimIndent())
+            """.trimIndent(),
+        )
 
         option = readNextInt("Enter option: ")
 
@@ -412,13 +414,12 @@ fun deleteMenu() {
             0 -> println("Returning to main menu...")
             else -> println("Invalid option.")
         }
-
     } while (option != 0)
 }
 
 fun deleteMovie(
     service: MovieService = movieService,
-    associationService: MovieActorService = movieActorService
+    associationService: MovieActorService = movieActorService,
 ) {
     if (service.getMovies().isEmpty()) {
         println("There are no movies to delete.")
@@ -451,7 +452,7 @@ fun deleteMovie(
 
 fun deleteActor(
     service: ActorService = actorService,
-    associationService: MovieActorService = movieActorService
+    associationService: MovieActorService = movieActorService,
 ) {
     if (service.getActors().isEmpty()) {
         println("There are no actors to delete.")
